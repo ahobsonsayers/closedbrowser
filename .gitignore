@@ -1,0 +1,10 @@
+# Ignore certain directories
+data/
+playground/
+recordings/
+scratch/
+
+# Ignore certain files
+.env
+*.secret
+*.secrets

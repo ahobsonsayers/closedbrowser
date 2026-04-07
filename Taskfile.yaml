@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+tasks:
+  format:
+    cmds:
+      - shfmt -w -i 2 -s **/*.sh
+      - chmod +x **/*.sh
+
+  lint:
+    cmds:
+      - shellcheck **/*.sh
+
+  build:
+    cmds:
+      - docker build . --tag arranhs/closedbrowser:latest
+
+  run:
+    cmds:
+      - docker compose up
