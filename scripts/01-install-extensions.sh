@@ -10,11 +10,10 @@ install_extension() {
   EXTENSION_URL=$(
     curl -s "https://api.github.com/repos/$EXTENSION_REPO/releases/latest" |
       jq -r '
-        .assets[]
-        | select(.name | ascii_downcase | contains("chrome"))
-        | .browser_download_url
-      ' |
-      head -1
+		[.assets[] | select(.name | ascii_downcase | (contains("chrome") or contains("chromium")))]
+		| sort_by(.name)
+		| .[0].browser_download_url
+	  '
   )
 
   if [[ -z $EXTENSION_URL ]]; then
@@ -32,11 +31,11 @@ install_extension() {
   EXTENSION_DIR=$(dirname "$MANIFEST_PATH")
 
   # Move extension
-  mv "$EXTENSION_DIR" "$GLOBAL_EXTENSIONS_DIR/$EXTENSION_NAME"
+  mv "$EXTENSION_DIR" "$EXTENSIONS_DIR/$EXTENSION_NAME"
   rm -rf "/tmp/$EXTENSION_NAME"
 }
 
-mkdir -p "$GLOBAL_EXTENSIONS_DIR"
+mkdir -p "$EXTENSIONS_DIR"
 
 install_extension "gorhill/uBlock"
 install_extension "OhMyGuus/I-Still-Dont-Care-About-Cookies"

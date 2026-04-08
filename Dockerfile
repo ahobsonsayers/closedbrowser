@@ -1,22 +1,21 @@
-FROM onkernel/chromium-headful:a0cfe0
+FROM ghcr.io/browserless/chromium:latest
 
-ENV RUN_AS_ROOT=false
+USER root
 
-ENV GLOBAL_EXTENSIONS_DIR=/home/kernel/.config/BraveSoftware/Brave-Browser/extensions
-ENV USER_EXTENSIONS_DIR=/home/kernel/user-data/extensions
+ENV DATA_DIR=/user-data
+ENV DOWNLOAD_DIR=/downloads
+ENV EXTENSIONS_DIR=$APP_DIR/extensions
 
 # Add scripts
 COPY scripts /tmp/scripts
 
-# Install and setup brave browser
+# Setup browser
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl jq unzip && \
-    /tmp/scripts/uninstall-chromium.sh && \
-    /tmp/scripts/install-brave.sh && \
-    /tmp/scripts/install-extensions.sh && \
-    /tmp/scripts/patch-wrapper.sh && \
+    /tmp/scripts/00-setup-dirs.sh && \
+    /tmp/scripts/01-install-extensions.sh && \
+    /tmp/scripts/02-setup-alias.sh && \
     rm -rf /tmp/scripts && \
     rm -rf /var/lib/apt/lists/*
 
-# Add brave browser policies
-COPY brave/policies.json /etc/brave/policies/managed/policies.json
+USER blessuser

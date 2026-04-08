@@ -16,14 +16,16 @@ get_extension_directories() {
   echo "$EXTENSION_DIRECTORIES"
 }
 
-GLOBAL_EXTENSIONS="$(get_extension_directories "$GLOBAL_EXTENSIONS_DIR")"
-USER_EXTENSIONS="$(get_extension_directories "$USER_EXTENSIONS_DIR")"
+GLOBAL_EXTENSIONS="$(get_extension_directories "$EXTENSIONS_DIR")"
+USER_EXTENSIONS="$(get_extension_directories "$DATA_DIR/extensions")"
 
 ALL_EXTENSIONS="${GLOBAL_EXTENSIONS}${USER_EXTENSIONS}"
 ALL_EXTENSIONS="${ALL_EXTENSIONS%,}" # Strip trailing comma
 
+CHROME_REAL="$(dirname "$0")/chrome.real"
+
 if [[ -n $ALL_EXTENSIONS ]]; then
-  exec brave-browser --no-sandbox --load-extension="$ALL_EXTENSIONS" "$@"
+  exec "$CHROME_REAL" --load-extension="$ALL_EXTENSIONS" "$@"
 fi
 
-exec brave-browser --no-sandbox "$@"
+exec "$CHROME_REAL" "$@"
