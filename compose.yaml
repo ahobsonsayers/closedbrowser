@@ -4,16 +4,10 @@ services:
     image: arranhs/closedbrowser:latest
     restart: unless-stopped
     ports:
-      - 8080:8080 # neko/webrtc viewer
-      - 56000-56100:56000-56100/udp # webrtc ports
-      - 9222:9222 # CDP
-      - 9224:9224 # ChromeDriver
-      - 10001:10001 # kernel recording api
+      - 3000:3000
     volumes:
-      - ./data/browser:/home/kernel/user-data
-      - ./data/recordings:/recordings
+      - ./data/user-data:/user-data
+      - ./data/downloads:/downloads
     environment:
-      - ENABLE_WEBRTC=true
-      - WIDTH=1280
-      - HEIGHT=720
+      - TOKEN=1234567890
       - TZ=Europe/London
