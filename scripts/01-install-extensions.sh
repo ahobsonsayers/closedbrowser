@@ -4,14 +4,19 @@ set -euo pipefail
 # install_extension <github-repo> <name>
 install_extension() {
 	EXTENSION_REPO="$1"
-	EXTENSION_NAME="${2,,}" # make extensions name lower case
+	EXTENSION_NAME="${2,,}" # make extensions name lowercase
 
 	EXTENSION_URL=$(
 		curl -s "https://api.github.com/repos/$EXTENSION_REPO/releases/latest" |
 			jq -r --arg name "$EXTENSION_NAME" '
-				[.assets[] | select(.name | ascii_downcase | (contains($name) and contains("chrome") or contains("chromium")))]
-				| sort_by(.name)
-				| .[0].browser_download_url
+				[
+					.assets[] | select(
+						.name | ascii_downcase |
+						contains($name) and (contains("chrome") or contains("chromium"))
+					)
+				] |
+				sort_by(.name) |
+				.[0].browser_download_url
 			'
 	)
 
