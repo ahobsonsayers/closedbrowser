@@ -80,7 +80,7 @@ jobs:
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Output digest
-        uses: GoCodeAlone/github-action-matrix-outputs-write@v1.0.3
+        uses: GoCodeAlone/github-action-matrix-outputs-write@1.0.3
         with:
           matrix-step-name: build
           matrix-key: ${{ matrix.platform-slug }}
