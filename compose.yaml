@@ -9,7 +9,5 @@ services:
       - ./data/user-data:/user-data
       - ./data/downloads:/downloads
     environment:
+      - TOKEN=1234567890
       - TZ=Europe/London
-      - TOKEN=1234567890 # set a token to require auth on all endpoints
-      # - DATA_DIR=
-      # - DOWNLOAD_DIR=
