@@ -99,7 +99,7 @@ jobs:
 
       - name: Get digests
         id: get-digests
-        uses: GoCodeAlone/github-action-matrix-outputs-read@v1.0.6
+        uses: GoCodeAlone/github-action-matrix-outputs-read@1.0.6
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
