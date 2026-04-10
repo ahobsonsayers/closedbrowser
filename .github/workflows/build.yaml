@@ -114,11 +114,8 @@ jobs:
         run: |
           DIGESTS=$(
             echo "$DIGESTS_JSON" |
-            jq -r --arg docker_image "$DOCKER_IMAGE" '
-              .digest |
-              to_entries[] |
-              "\($docker_image)@(.value)"
-            '
+            jq -r --arg docker_image "$DOCKER_IMAGE" \
+              '.digest | to_entries[] | "\($docker_image)@\(.value)"'
           )
 
           docker buildx imagetools create \
