@@ -100,6 +100,8 @@ jobs:
       - name: Get digests
         id: get-digests
         uses: GoCodeAlone/github-action-matrix-outputs-read@1.0.6
+        with:
+          matrix-step-name: build
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
