@@ -1,6 +1,7 @@
 services:
   closedbrowser:
     container_name: closedbrowser
+    build: .
     image: arranhs/closedbrowser:latest
     restart: unless-stopped
     ports:

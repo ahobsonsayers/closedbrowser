@@ -16,19 +16,14 @@ get_extension_directories() {
 	echo "$EXTENSION_DIRECTORIES"
 }
 
-GLOBAL_EXTENSIONS="$(get_extension_directories "$EXTENSIONS_DIR")"
-USER_EXTENSIONS="$(get_extension_directories "$DATA_DIR/extensions")"
+GLOBAL_EXTENSIONS="$(get_extension_directories "$GLOBAL_EXTENSIONS_DIR")"
+USER_EXTENSIONS="$(get_extension_directories "$USER_EXTENSIONS_DIR")"
 
 ALL_EXTENSIONS="${GLOBAL_EXTENSIONS}${USER_EXTENSIONS}"
 ALL_EXTENSIONS="${ALL_EXTENSIONS%,}" # Strip trailing comma
 
-CHROME_REAL="$(dirname "$0")/chrome.real"
-
-# Stealth flags to prevent detection
-STEALTH_FLAGS="--disable-blink-features=AutomationControlled"
-
 if [[ -n $ALL_EXTENSIONS ]]; then
-	exec "$CHROME_REAL" $STEALTH_FLAGS --load-extension="$ALL_EXTENSIONS" "$@"
+	exec brave-browser --no-sandbox --load-extension="$ALL_EXTENSIONS" "$@"
 fi
 
-exec "$CHROME_REAL" $STEALTH_FLAGS "$@"
+exec brave-browser --no-sandbox "$@"

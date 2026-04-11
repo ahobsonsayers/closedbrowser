@@ -9,30 +9,18 @@ ENV EXTENSIONS_DIR=$APP_DIR/extensions
 # Add scripts
 COPY scripts /tmp/scripts
 
-# Setup browser
+# Install Brave browser, remove Chromium, and setup
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl jq unzip && \
+    /tmp/scripts/uninstall-chromium.sh && \
+    /tmp/scripts/install-brave.sh && \
     /tmp/scripts/01-install-extensions.sh && \
-    /tmp/scripts/02-setup-alias.sh && \
+    /tmp/scripts/patch-wrapper.sh && \
     rm -rf /tmp/scripts && \
     rm -rf /var/lib/apt/lists/*
 
-# Fully replace playwright-core with patchright
-RUN npm install -g patchright@latest && \
-    GLOBAL_NPM=$(npm root -g) && \
-    PW_CORE="/usr/src/app/node_modules/playwright-core" && \
-    # Backup original browsers.json
-    cp "$PW_CORE/browsers.json" /tmp/browsers.json && \
-    # Remove old playwright-core
-    rm -rf "$PW_CORE" && \
-    # Copy patchright as new playwright-core
-    cp -r "$GLOBAL_NPM/patchright" "$PW_CORE" && \
-    # Restore browsers.json
-    cp /tmp/browsers.json "$PW_CORE/browsers.json" && \
-    # Copy patchright-core dependency
-    mkdir -p "$PW_CORE/node_modules" && \
-    cp -r "$GLOBAL_NPM/patchright/node_modules/patchright-core" "$PW_CORE/node_modules/" && \
-    rm /tmp/browsers.json
+# Add brave browser policies
+COPY brave/policies.json /etc/brave/policies/managed/policies.json
 
 # Create directories
 RUN mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR" && \
