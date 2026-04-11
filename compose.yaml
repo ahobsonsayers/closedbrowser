@@ -5,9 +5,3 @@ services:
     restart: unless-stopped
     ports:
       - 3000:3000
-    volumes:
-      - ./data/user-data:/user-data
-      - ./data/downloads:/downloads
-    environment:
-      - TOKEN=1234567890
-      - TZ=Europe/London

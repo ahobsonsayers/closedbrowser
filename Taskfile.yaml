@@ -17,4 +17,6 @@ tasks:
 
   run:
     cmds:
+      - mkdir -p ./data
+      - chmod -R 777 ./data
       - docker compose up
