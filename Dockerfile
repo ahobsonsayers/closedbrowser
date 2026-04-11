@@ -15,6 +15,7 @@ RUN apt-get update && \
     /tmp/scripts/uninstall-chromium.sh && \
     /tmp/scripts/install-brave.sh && \
     /tmp/scripts/01-install-extensions.sh && \
+    /tmp/scripts/02-setup-alias.sh && \
     /tmp/scripts/patch-wrapper.sh && \
     rm -rf /tmp/scripts && \
     rm -rf /var/lib/apt/lists/*
