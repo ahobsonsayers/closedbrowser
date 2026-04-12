@@ -18,3 +18,21 @@ tasks:
   run:
     cmds:
       - docker compose up
+
+  test:
+    cmds:
+      - task: test:rebrowser
+      - task: test:sannysoft
+      - task: test:creepjs
+
+  test:rebrowser:
+    cmds:
+      - ./tests/test-rebrowser.sh
+
+  test:sannysoft:
+    cmds:
+      - ./tests/test-sannysoft.sh
+
+  test:creepjs:
+    cmds:
+      - ./tests/test-creepjs.sh
