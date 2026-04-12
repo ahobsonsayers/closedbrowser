@@ -17,6 +17,16 @@ RUN apt-get update && \
     rm -rf /tmp/scripts && \
     rm -rf /var/lib/apt/lists/*
 
+# Apply patchright anti-detection patches
+RUN npm install -g patchright@latest && \
+    GLOBAL_NPM=$(npm root -g) && \
+    PW_CORE="/usr/src/app/node_modules/playwright-core" && \
+    cp "$PW_CORE/browsers.json" /tmp/browsers.json && \
+    rm -rf "$PW_CORE" && \
+    cp -r "$GLOBAL_NPM/patchright/node_modules/patchright-core" "$PW_CORE" && \
+    cp /tmp/browsers.json "$PW_CORE/browsers.json" && \
+    rm /tmp/browsers.json
+
 # Create directories
 RUN mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR" && \
     chown -R blessuser:blessuser "$DATA_DIR" "$DOWNLOAD_DIR"
