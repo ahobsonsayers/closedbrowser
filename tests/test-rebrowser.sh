@@ -1,10 +1,8 @@
 #!/bin/bash
 # Rebrowser test
 
-TOKEN=${BROWSERLESS_TOKEN:-1234567890}
-
 echo "Fetching..."
-HTML=$(curl -s "http://localhost:3000/content?token=$TOKEN" \
+HTML=$(curl -s "http://localhost:3000/content" \
 	-H "Content-Type: application/json" \
 	-X POST \
 	-d '{"url":"https://bot-detector.rebrowser.net/","waitForTimeout":5000}')
