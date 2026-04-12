@@ -15,9 +15,17 @@ tasks:
     cmds:
       - docker build . --tag arranhs/closedbrowser:latest
 
+  build:no-cache:
+    cmds:
+      - docker build . --tag arranhs/closedbrowser:latest --no-cache
+
   run:
     cmds:
       - docker compose up
+
+  run:daemon:
+    cmds:
+      - docker compose up -d
 
   test:
     cmds:
