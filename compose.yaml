@@ -9,5 +9,4 @@ services:
       - ./data/user-data:/user-data
       - ./data/downloads:/downloads
     environment:
-      - TOKEN=1234567890
       - TZ=Europe/London
