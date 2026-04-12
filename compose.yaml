@@ -10,4 +10,3 @@ services:
       - ./data/downloads:/downloads
     environment:
       - TZ=Europe/London
-      - HEADLESS=false

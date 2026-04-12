@@ -39,4 +39,3 @@ To add your own, drop an unpacked extension directory (must contain a `manifest.
 | `QUEUED`     | `10`    | Max queued requests before `429` reject  |
 | `TIMEOUT`    | `30000` | Session timeout ms (`-1` for no timeout) |
 | `TZ`         | `UTC`   | Timezone (e.g. `Europe/London`)          |
-| `HEADLESS`   | `true`  | Run browser in headless mode             |

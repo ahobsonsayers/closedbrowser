@@ -2,7 +2,7 @@
 # CreepJS test
 
 echo "Fetching..."
-HTML=$(curl -s "http://localhost:3000/content" \
+HTML=$(curl -s "http://localhost:3000/content?headless=false" \
 	-H "Content-Type: application/json" \
 	-X POST \
 	-d '{"url":"https://abrahamjuliot.github.io/creepjs/","waitForTimeout":15000}')

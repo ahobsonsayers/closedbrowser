@@ -2,7 +2,7 @@
 # Rebrowser test
 
 echo "Fetching..."
-HTML=$(curl -s "http://localhost:3000/content" \
+HTML=$(curl -s "http://localhost:3000/content?headless=false" \
 	-H "Content-Type: application/json" \
 	-X POST \
 	-d '{"url":"https://bot-detector.rebrowser.net/","waitForTimeout":5000}')
