@@ -22,8 +22,16 @@ USER_EXTENSIONS="$(get_extension_directories "$USER_EXTENSIONS_DIR")"
 ALL_EXTENSIONS="${GLOBAL_EXTENSIONS}${USER_EXTENSIONS}"
 ALL_EXTENSIONS="${ALL_EXTENSIONS%,}" # Strip trailing comma
 
+# Filter out automation flags that expose the browser
+FILTERED_ARGS=()
+for arg in "$@"; do
+	if [[ "$arg" != "--enable-automation" ]]; then
+		FILTERED_ARGS+=("$arg")
+	fi
+done
+
 if [[ -n $ALL_EXTENSIONS ]]; then
-	exec brave-browser --no-sandbox --load-extension="$ALL_EXTENSIONS" "$@"
+	exec brave-browser --no-sandbox --load-extension="$ALL_EXTENSIONS" "${FILTERED_ARGS[@]}"
 fi
 
-exec brave-browser --no-sandbox "$@"
+exec brave-browser --no-sandbox "${FILTERED_ARGS[@]}"
