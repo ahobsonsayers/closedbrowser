@@ -1,11 +1,20 @@
-#!/bin/bash
-# Rebrowser test
+#!/usr/bin/env bash
+# Rebrowser test - checks for bot detection flags
 
-echo "Fetching..."
-HTML=$(curl -s "http://localhost:3000/content?headless=false" \
-	-H "Content-Type: application/json" \
-	-X POST \
-	-d '{"url":"https://bot-detector.rebrowser.net/","waitForTimeout":5000}')
+set -euo pipefail
+
+BROWSER_URL="ws://localhost:3000/?stealth=true"
+TEST_URL="https://bot-detector.rebrowser.net/"
+
+# Cleanup on exit
+cleanup() { browser-use close 2>/dev/null || true; }
+trap cleanup EXIT
+
+browser-use close 2>/dev/null || true
+browser-use --cdp-url "$BROWSER_URL" open "$TEST_URL"
+sleep 3
+
+HTML=$(browser-use get html)
 
 echo "$HTML" | htmlq 'table#detections-table tbody tr' -t |
 	grep -oP '^[⚪🟢🔴] [^[:space:]]+' |

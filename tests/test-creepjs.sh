@@ -1,13 +1,21 @@
-#!/bin/bash
-# CreepJS test
+#!/usr/bin/env bash
+# CreepJS test - checks for bot detection scores
 
-echo "Fetching..."
-HTML=$(curl -s "http://localhost:3000/content?headless=false" \
-	-H "Content-Type: application/json" \
-	-X POST \
-	-d '{"url":"https://abrahamjuliot.github.io/creepjs/","waitForTimeout":15000}')
+set -euo pipefail
 
-echo ""
+BROWSER_URL="ws://localhost:3000/?stealth=true"
+TEST_URL="https://abrahamjuliot.github.io/creepjs/"
+
+# Cleanup on exit
+cleanup() { browser-use close 2>/dev/null || true; }
+trap cleanup EXIT
+
+browser-use close 2>/dev/null || true
+browser-use --cdp-url "$BROWSER_URL" open "$TEST_URL"
+sleep 10
+
+HTML=$(browser-use get html)
+
 echo "SCORES:"
 echo "$HTML" | grep -oE '[0-9]+% (like headless|headless|stealth)' | head -3
 
