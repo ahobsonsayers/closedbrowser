@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Sannysoft test - checks for bot detection flags
-
 set -euo pipefail
 
 BROWSER_URL="ws://localhost:3000/?headless=false&stealth=true"
@@ -12,7 +10,7 @@ trap cleanup EXIT
 
 browser-use close 2>/dev/null || true
 browser-use --cdp-url "$BROWSER_URL" open "$TEST_URL"
-sleep 5
+sleep 10
 
 HTML=$(browser-use get html)
 

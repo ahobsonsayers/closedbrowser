@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# CreepJS test - checks for bot detection scores
-
 set -euo pipefail
 
 BROWSER_URL="ws://localhost:3000/?headless=false&stealth=true"
