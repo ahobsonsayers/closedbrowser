@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-BROWSER_URL="ws://localhost:3000/?stealth=true"
+BROWSER_URL="ws://localhost:3000/?headless=false&stealth=true"
 TEST_URL="https://bot.sannysoft.com/"
 
 # Cleanup on exit
