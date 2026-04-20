@@ -19,11 +19,17 @@ tasks:
     cmds:
       - docker build . --tag arranhs/closedbrowser:latest --no-cache
 
+  run:init:
+    cmds:
+      - mkdir -p ./data/user-data ./data/downloads
+
   run:
+    deps: [run:init]
     cmds:
       - docker compose up
 
   run:daemon:
+    deps: [run:init]
     cmds:
       - docker compose up -d
 
