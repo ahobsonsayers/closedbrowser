@@ -17,5 +17,5 @@ sleep 5
 HTML=$(browser-use get html)
 
 echo "$HTML" | htmlq 'table:first-of-type tr' -t |
-	sed '/^$/d;s/^[[:space:]]*//;s/[[:space:]]*$//' |
-	awk 'NR%2==1{n=$0} NR%2==0{if(n&&$0&&n!="Test Name"&&$0!="Result")print n": "$0}'
+  sed '/^$/d;s/^[[:space:]]*//;s/[[:space:]]*$//' |
+  awk 'NR%2==1{n=$0} NR%2==0{if(n&&$0&&n!="Test Name"&&$0!="Result")print n": "$0}'
