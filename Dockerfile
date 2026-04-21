@@ -2,23 +2,27 @@ FROM ghcr.io/browserless/chromium:v2.47.0
 
 USER root
 
+# Directory environment variables.
+# It is recommend to not override these at run time.
 ENV DATA_DIR=/user-data
 ENV DOWNLOAD_DIR=/downloads
-ENV EXTENSIONS_DIR=$APP_DIR/extensions
+ENV GLOBAL_EXTENSIONS_DIR=$APP_DIR/extensions
+ENV USER_EXTENSIONS_DIR=/user-extensions
 
-# Add scripts
+# Add scripts and patches
 COPY scripts /tmp/scripts
+COPY patches /tmp/patches
 
 # Setup browser
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl jq unzip && \
-    /tmp/scripts/01-install-extensions.sh && \
-    /tmp/scripts/02-setup-alias.sh && \
-    rm -rf /tmp/scripts && \
+    /tmp/scripts/01-patch-browserless.sh && \
+    /tmp/scripts/02-install-extensions.sh && \
+    rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
 
-# Create directories
-RUN mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR" && \
-    chown -R blessuser:blessuser "$DATA_DIR" "$DOWNLOAD_DIR"
+# Create directories and fix permissions
+RUN mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR" "$USER_EXTENSIONS_DIR" && \
+    chown -R blessuser:blessuser "$DATA_DIR" "$DOWNLOAD_DIR" "$GLOBAL_EXTENSIONS_DIR" "$USER_EXTENSIONS_DIR"
 
 USER blessuser
