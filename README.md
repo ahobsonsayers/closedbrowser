@@ -32,7 +32,7 @@ To add your own, drop an unpacked extension directory (must contain a `manifest.
 
 ## Environment variables
 
-ClosedBrowser has environment variables that are both unique/specific to this image and inherited from the base browserless image.
+ClosedBrowser has environment variables that are both unique/specific to this image and inherited from the base Browserless image.
 
 ### ClosedBrowser environment variables
 
@@ -45,7 +45,7 @@ Recommended not to change.
 
 ### Browserless environment variables
 
-The standard browserless configuration environment variables can be seen below, as found in [config.ts](https://github.com/browserless/browserless/blob/main/src/config.ts).
+The standard Browserless configuration environment variables can be seen below, as found in [config.ts](https://github.com/browserless/browserless/blob/main/src/config.ts).
 
 ### Server
 
@@ -136,5 +136,3 @@ The standard browserless configuration environment variables can be seen below, 
 | Variable | Default | Description |
 | --- | --- | --- |
 | `TZ` | `UTC` | Timezone (e.g. `Europe/London`) |
-
-
