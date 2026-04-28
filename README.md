@@ -14,6 +14,22 @@ docker compose up -d
 | ------ | ------------------------------------------------------ |
 | `3000` | Browserless API — HTTP, WebSocket, docs at `/docs`     |
 
+## Routes
+
+Useful endpoints to be aware of. See `/docs` for full API details.
+
+| Route | Description |
+| ----- | ----------- |
+| `/` | Chromium browser WebSocket (Puppeteer/CDP) |
+| `/chromium` | Alias for `/` |
+| `/chromium/playwright` | Playwright Chromium WebSocket |
+| `/docs` | API documentation (interactive) |
+| `/debugger` | Built-in Chrome DevTools debugger |
+| `/metrics` | Browserless metrics |
+| `/chromium/screenshot` | Screenshot REST API |
+| `/chromium/content` | Content extraction REST API |
+| `/chromium/pdf` | PDF generation REST API |
+
 ## Persistence
 
 By default browser data is ephemeral and lost on container restart. To persist the profile (history, cookies, settings) mount the `user-data` directory:
