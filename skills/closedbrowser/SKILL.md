@@ -18,49 +18,31 @@ echo "CLOSEDBROWSER_URL: $(printenv CLOSEDBROWSER_URL || echo NOT_SET)" && echo 
 
 **If CLOSEDBROWSER_URL is not set, stop and ask the user to set it.** Nothing else matters without it.
 
-Then select a tool:
-
-| Result | Action |
-|--------|--------|
-| Only agent-browser found | Read `agent-browser.md` in this skill directory for full usage. All commands require `--cdp` flag. |
-| Only browser-use found | Read `browser-use.md` in this skill directory for full usage. All commands require `--cdp-url` flag. |
-| Both found | **You MUST ask the user which they prefer.** Provide this comparison to help them decide:<br><br>**browser-use** (recommended): More accurate element detection, richer feature set. Better for complex interactions.<br>**agent-browser**: More token-efficient, lower context overhead. Better for quick, repetitive tasks.<br><br>Do not proceed until they choose. After they answer, read the corresponding file. |
-| Neither found | Tell the user they need one of the tools below, then **stop and wait**. Never install for the user. |
-
-**Installation instructions (provide to user, never run yourself):**
-- agent-browser: `brew install agent-browser` — see https://agent-browser.dev/installation
-- browser-use: `pip install browser-use` — see https://docs.browser-use.com/open-source/browser-use-cli
-
-## Step 2: Read Tool Reference
-
-After determining which tool to use, read the corresponding file from this skill directory:
-- **agent-browser** → read `agent-browser.md`
-- **browser-use** → read `browser-use.md`
-
-Follow the instructions in that file for all subsequent steps (connect, workflow, commands, troubleshooting).
-
-## Shared Rules
-
-These apply regardless of which tool is selected:
-
-- **Never install tools for the user** — only provide instructions
-- **Never launch a local browser** — this skill only connects to an external browser via CDP
-- **Always use literal URL values** — read `CLOSEDBROWSER_URL` from env once, then use the actual value in all commands; never use `$CLOSEDBROWSER_URL` shell substitutions
-
-## Shared: Reading CLOSEDBROWSER_URL
-
-```bash
-printenv CLOSEDBROWSER_URL
-```
-
-If not set, **stop and ask the user to set it**.
-
 **Normalize the URL if needed:**
 - Has a port (e.g., `localhost:3000`) → `ws://` (local, no SSL)
 - No port (e.g., `browser.example.com`) → `wss://` (remote, SSL)
 - On connection failure, try the other protocol
 
-## Shared: Anti-Bot Protection (Headful + Stealth)
+Then select a tool:
+
+| Result | Action |
+|--------|--------|
+| Only agent-browser found | Read `agent-browser.md` in this skill directory. |
+| Only browser-use found | Read `browser-use.md` in this skill directory. |
+| Both found | Ask the user which they prefer. Wait for answer, then read the corresponding file. |
+| Neither found | Tell the user they need one of the tools below, then **stop and wait**. Never install for the user. |
+
+**Installation instructions (provide to user, never run yourself):**
+- agent-browser: `brew install agent-browser` — see https://agent-browser.dev/installation
+- browser-use: `curl -fsSL https://browser-use.com/cli/install.sh | bash` — see https://docs.browser-use.com/open-source/browser-use-cli
+
+## Shared Rules
+
+- **Never install tools for the user** — only provide instructions
+- **Never launch a local browser** — this skill only connects to an external browser via CDP
+- **Always use literal URL values** — read `CLOSEDBROWSER_URL` once, then use the actual value in all commands; never use `$CLOSEDBROWSER_URL` shell substitutions
+
+## Anti-Bot Protection (Headful + Stealth)
 
 **When in doubt, use headful + stealth — it does no harm on unprotected sites.**
 
@@ -78,14 +60,13 @@ ws://localhost:3000?headless=false&stealth=true
 
 Always use both flags together — never just one.
 
-## Shared: Troubleshooting
+## Troubleshooting
 
 | Error | Action |
 |-------|--------|
-| CLOSEDBROWSER_URL not set | Ask user to set the env var. Stop and wait. |
 | Connection refused | Check URL, protocol (`ws://` vs `wss://`), and that the container is running. Try the other protocol. |
 | 400 Bad Request with query params | Missing trailing slash — use `ws://host:port/?...`, not `ws://host:port?...`. |
 | Site blocked / CAPTCHA | Close and reconnect with `/?headless=false&stealth=true` on the CDP URL. |
-| CDP connection dropped | Remote browser session expired due to inactivity or total-session timeout. Add `timeout` query param to extend session lifetime, e.g. `ws://localhost:3000/?headless=false&stealth=true&timeout=120000`. Increase further for long-running sessions. |
+| CDP connection dropped / session expired | Remote browser closed due to inactivity or session timeout. Add `timeout` query param to extend lifetime, e.g. `ws://localhost:3000/?headless=false&stealth=true&timeout=120000`. Increase further for long-running sessions. |
 
 See the tool-specific reference file for additional troubleshooting.

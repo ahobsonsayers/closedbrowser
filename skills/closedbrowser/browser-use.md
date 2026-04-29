@@ -2,33 +2,27 @@
 
 ## Rules
 
-- **Always use `--cdp-url`** — every command must include the CDP URL; browser-use does not persist connections between commands
+- **Never omit `--cdp-url`** — every command must include the CDP URL; browser-use does not persist connections between commands
 - **`--cdp-url` is a global flag** — it must come before the subcommand
 
 ## Connect
 
-```bash
-browser-use --cdp-url <url> open <target-url>
-```
-
-All subsequent commands also require `--cdp-url`:
+browser-use does NOT persist connections — pass `--cdp-url` on every command:
 
 ```bash
-browser-use --cdp-url <url> state
-browser-use --cdp-url <url> click 5
+browser-use --cdp-url ws://localhost:9222 open https://example.com
+browser-use --cdp-url ws://localhost:9222 state    # must repeat URL
+browser-use --cdp-url ws://localhost:9222 click 5   # must repeat URL
 ```
 
-To disconnect:
+`--cdp-url` accepts both `ws://` and `http://` URLs:
+- `ws://localhost:9222` or `wss://browser.example.com`
+- `http://localhost:9222` (auto-discovers WebSocket endpoint)
+
+To close:
 
 ```bash
 browser-use --cdp-url <url> close
-```
-
-To switch URLs, close first then connect with new URL:
-
-```bash
-browser-use --cdp-url <old-url> close
-browser-use --cdp-url <new-url> open <target-url>
 ```
 
 ## Workflow
@@ -49,10 +43,10 @@ browser-use --cdp-url <url> close
 
 ## Anti-Bot Reconnect
 
-If already connected and blocked:
+Close and reconnect with stealth params on the CDP URL:
 
 ```bash
-browser-use --cdp-url <old-url> close
+browser-use --cdp-url <url> close
 browser-use --cdp-url "ws://localhost:3000/?headless=false&stealth=true" open <target-url>
 ```
 
