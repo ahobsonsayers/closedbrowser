@@ -52,12 +52,9 @@ ClosedBrowser has environment variables that are both unique/specific to this im
 
 ### ClosedBrowser environment variables
 
-Recommended not to change.
-
 | Variable | Default | Description |
 | --- | --- | --- |
-| `GLOBAL_EXTENSIONS_DIR` | `$APP_DIR/extensions` | Pre-installed extensions directory (uBlock, IDCAC) |
-| `USER_EXTENSIONS_DIR` | `/user-extensions` | Custom user extensions mount point |
+| `EXTENSION_UBLOCK_ENABLED` | `true` | Enable uBlock Origin Lite by default (`true`/`false`) |
 
 ### Browserless environment variables
 

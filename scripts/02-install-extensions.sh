@@ -43,5 +43,4 @@ install_extension() {
 rm -rf "$GLOBAL_EXTENSIONS_DIR"
 mkdir -p "$GLOBAL_EXTENSIONS_DIR"
 
-install_extension "uBlockOrigin/uBOL-home" "ubolite"
 install_extension "OhMyGuus/I-Still-Dont-Care-About-Cookies" "isdcac"

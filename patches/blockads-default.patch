@@ -1,0 +1,13 @@
+diff --git a/src/browsers/index.ts b/src/browsers/index.ts
+index 93755fa..89e1efb 100644
+--- a/src/browsers/index.ts
++++ b/src/browsers/index.ts
+@@ -425,7 +425,7 @@ export class BrowserManager {
+     const blockAds = parseBooleanParam(
+       req.parsed.searchParams,
+       'blockAds',
+-      false,
++      process.env.EXTENSION_UBLOCK_ENABLED !== 'false',
+     );
+     const trackingId =
+       parseStringParam(req.parsed.searchParams, 'trackingId', '') || undefined;
