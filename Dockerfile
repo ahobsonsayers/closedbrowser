@@ -12,6 +12,7 @@ ENV USER_EXTENSIONS_DIR=/user-extensions
 # Add scripts and patches
 COPY scripts /tmp/scripts
 COPY patches /tmp/patches
+COPY scripts/entrypoint.sh /usr/src/app/scripts/entrypoint.sh
 
 # Setup browser
 RUN apt-get update && \
@@ -26,3 +27,5 @@ RUN mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR" "$USER_EXTENSIONS_DIR" && \
     chown -R blessuser:blessuser "$DATA_DIR" "$DOWNLOAD_DIR" "$GLOBAL_EXTENSIONS_DIR" "$USER_EXTENSIONS_DIR"
 
 USER blessuser
+
+ENTRYPOINT ["/usr/src/app/scripts/entrypoint.sh"]

@@ -70,8 +70,6 @@ Each feature or change gets its own branch. Never combine unrelated changes.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `GLOBAL_EXTENSIONS_DIR` | `$APP_DIR/extensions` | Pre-installed extensions |
-| `USER_EXTENSIONS_DIR` | `/user-extensions` | Custom extension mount point |
 | `HOST` | `localhost` | Listen address |
 | `PORT` | `3000` | Listen port |
 | `DEBUG` | `browserless*,-**:verbose` | Debug logging filter |

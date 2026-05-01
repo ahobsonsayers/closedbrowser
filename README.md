@@ -42,7 +42,7 @@ volumes:
 
 ## Extensions
 
-[uBlock Origin Lite](https://github.com/uBlockOrigin/uBOL-home) and [I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies) are pre-installed.
+[uBlock Origin Lite](https://github.com/uBlockOrigin/uBOL-home), [I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies), and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
 
 To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `data/user-data/extensions/` and restart the container. Requires the `user-data` mount above.
 
@@ -55,6 +55,7 @@ ClosedBrowser has environment variables that are both unique/specific to this im
 | Variable | Default | Description |
 | --- | --- | --- |
 | `EXTENSION_UBLOCK_ENABLED` | `true` | Enable uBlock Origin Lite by default (`true`/`false`) |
+| `EXTENSION_NOPECHA_API_KEY` | — | NopeCHA extension API key (optional, 100 free credits/24h) |
 
 ### Browserless environment variables
 
