@@ -4,11 +4,12 @@ USER root
 
 # Directory environment variables.
 # It is recommend to not override these at run time.
-ENV DATA_DIR=/data/profiles
-ENV DOWNLOAD_DIR=/data/downloads
+ENV MOUNT_DIR=/data
+ENV DATA_DIR=$MOUNT_DIR/profiles
+ENV DOWNLOAD_DIR=$MOUNT_DIR/downloads
 
 ENV GLOBAL_EXTENSIONS_DIR=$APP_DIR/extensions
-ENV USER_EXTENSIONS_DIR=/data/extensions
+ENV USER_EXTENSIONS_DIR=$MOUNT_DIR/extensions
 
 # Add scripts and patches
 COPY scripts /tmp/scripts
@@ -22,10 +23,6 @@ RUN apt-get update && \
     /tmp/scripts/02-install-extensions.sh && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
-
-# Create directories and fix permissions
-RUN mkdir -p /data $DATA_DIR" "$DOWNLOAD_DIR" "$USER_EXTENSIONS_DIR" "/data" && \
-    chown -R blessuser:blessuser "$DATA_DIR" "$DOWNLOAD_DIR" "$USER_EXTENSIONS_DIR"
 
 USER blessuser
 
