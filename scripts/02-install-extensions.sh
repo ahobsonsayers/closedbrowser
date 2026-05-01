@@ -8,11 +8,11 @@ install_extension() {
 
   EXTENSION_URL=$(
     curl -s "https://api.github.com/repos/$EXTENSION_REPO/releases/latest" |
-      jq -r --arg name "$EXTENSION_NAME" '
+      jq -r '
 				[
 					.assets[] | select(
 						.name | ascii_downcase |
-						contains($name) and (contains("chrome") or contains("chromium"))
+						(contains("chrome") or contains("chromium"))
 					)
 				] |
 				sort_by(.name) |
@@ -44,3 +44,4 @@ rm -rf "$GLOBAL_EXTENSIONS_DIR"
 mkdir -p "$GLOBAL_EXTENSIONS_DIR"
 
 install_extension "OhMyGuus/I-Still-Dont-Care-About-Cookies" "isdcac"
+install_extension "NopeCHALLC/nopecha-extension" "nopecha"
