@@ -7,7 +7,6 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./data/user-data:/user-data
-      - ./data/downloads:/downloads
+      - ./data:/data
     environment:
       - TZ=Europe/London

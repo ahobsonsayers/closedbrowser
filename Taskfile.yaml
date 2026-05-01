@@ -21,7 +21,7 @@ tasks:
 
   run:init:
     cmds:
-      - mkdir -p ./data/user-data ./data/downloads
+      - mkdir -p ./data
 
   run:
     deps: [run:init]

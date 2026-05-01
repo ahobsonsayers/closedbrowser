@@ -30,21 +30,33 @@ Useful endpoints to be aware of. See `/docs` for full API details.
 | `/chromium/content` | Content extraction REST API |
 | `/chromium/pdf` | PDF generation REST API |
 
-## Persistence
-
-By default browser data is ephemeral and lost on container restart. To persist the profile (history, cookies, settings) mount the `user-data` directory:
-
-```yaml
-volumes:
-  - ./data/user-data:/user-data
-  - ./data/downloads:/downloads
-```
-
 ## Extensions
 
 [uBlock Origin Lite](https://github.com/uBlockOrigin/uBOL-home), [I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies), and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
 
-To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `data/user-data/extensions/` and restart the container. Requires the `user-data` mount above.
+To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `data/extensions/` and restart the container. Requires the `data` mount above.
+
+## Mounting
+
+Mount a single `data` directory to persist all browser data:
+
+```yaml
+volumes:
+  - ./data:/data
+```
+
+| Directory | Description |
+| --------- | ----------- |
+| `/data/profiles/` | Browser profile (cookies, history, local storage) |
+| `/data/downloads/` | Downloaded files |
+| `/data/extensions/` | Custom extensions (must contain `manifest.json`) |
+
+**Note:** Create the `./data` directory on the host before running to prevent permission issues:
+
+```bash
+mkdir -p ./data
+docker compose up -d
+```
 
 ## Environment variables
 
@@ -121,8 +133,6 @@ The standard Browserless configuration environment variables can be seen below, 
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `DATA_DIR` | `/user-data` | Browser profile persistence directory (recommended not to change) |
-| `DOWNLOAD_DIR` | `/downloads` | Download directory (recommended not to change) |
 | `METRICS_JSON_PATH` | `tmpdir` | Path to write metrics JSON file |
 | `ROUTES` | `build/routes` | Custom API routes directory |
 | `STATIC` | `static` | Static file directory for debugger |
