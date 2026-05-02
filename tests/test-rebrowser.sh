@@ -5,10 +5,10 @@ BROWSER_URL="ws://localhost:3000/?headless=false&stealth=true"
 TEST_URL="https://bot-detector.rebrowser.net/"
 
 # Cleanup on exit
-cleanup() { browser-use close 2>/dev/null || true; }
+cleanup() { browser-use close 2> /dev/null || true; }
 trap cleanup EXIT
 
-browser-use close 2>/dev/null || true
+browser-use close 2> /dev/null || true
 browser-use --cdp-url "$BROWSER_URL" open "$TEST_URL"
 sleep 10
 
