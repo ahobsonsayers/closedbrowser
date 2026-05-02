@@ -11,6 +11,9 @@ ENV DOWNLOAD_DIR=$MOUNT_DIR/downloads
 ENV GLOBAL_EXTENSIONS_DIR=$APP_DIR/extensions
 ENV USER_EXTENSIONS_DIR=$MOUNT_DIR/extensions
 
+# Install gosu
+COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
+
 # Add scripts and patches
 COPY scripts /tmp/scripts
 COPY patches /tmp/patches
@@ -23,8 +26,5 @@ RUN apt-get update && \
     /tmp/scripts/02-install-extensions.sh && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
-
-# Install gosu
-COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
 
 ENTRYPOINT ["/usr/src/app/scripts/entrypoint.sh"]
