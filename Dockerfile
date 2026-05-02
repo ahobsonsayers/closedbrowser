@@ -24,6 +24,7 @@ RUN apt-get update && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
 
-USER blessuser
+# Install gosu
+COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
 
 ENTRYPOINT ["/usr/src/app/scripts/entrypoint.sh"]

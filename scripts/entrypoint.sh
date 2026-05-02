@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Create folder structure
 mkdir -p /data "$DATA_DIR" "$DOWNLOAD_DIR" "$USER_EXTENSIONS_DIR"
-chown -R blessuser:blessuser /data
+chown -R blessuser:blessuser /data || true
 
 # Configure NopeCHA with API Key
 if [[ -n ${EXTENSION_NOPECHA_API_KEY:-} ]]; then
@@ -12,5 +12,5 @@ if [[ -n ${EXTENSION_NOPECHA_API_KEY:-} ]]; then
   mv "${MANIFEST}.tmp" "$MANIFEST"
 fi
 
-# Run original base image entrypoint
-exec /usr/src/app/scripts/start.sh "$@"
+# Run original base image entrypoint (as blessuser)
+exec gosu blessuser /usr/src/app/scripts/start.sh "$@"
