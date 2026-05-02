@@ -13,15 +13,18 @@ Browser automation via CLI connecting to an external browser over CDP WebSocket.
 Run this single check before doing anything else:
 
 ```bash
-echo "CLOSEDBROWSER_URL: $(printenv CLOSEDBROWSER_URL || echo NOT_SET)" && echo "agent-browser: $(which agent-browser 2>/dev/null || echo NOT_FOUND)" && echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
+echo "CLOSEDBROWSER_URL: $(printenv CLOSEDBROWSER_URL || echo NOT_SET)" && echo "CLOSEDBROWSER_TOKEN: $(printenv CLOSEDBROWSER_TOKEN || echo NOT_SET)" && echo "agent-browser: $(which agent-browser 2>/dev/null || echo NOT_FOUND)" && echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
 ```
 
 **If CLOSEDBROWSER_URL is not set, stop and ask the user to set it.** Nothing else matters without it.
+
+**CLOSEDBROWSER_TOKEN is optional** — only required if the container was started with a `TOKEN` environment variable.
 
 **Normalize the URL if needed:**
 - Has a port (e.g., `localhost:3000`) → `ws://` (local, no SSL)
 - No port (e.g., `browser.example.com`) → `wss://` (remote, SSL)
 - On connection failure, try the other protocol
+- If `CLOSEDBROWSER_TOKEN` is set, append as query param after trailing slash: `/?token=YOUR_TOKEN`
 
 Then select a tool:
 
@@ -40,15 +43,16 @@ Then select a tool:
 
 - **Never install tools for the user** — only provide instructions
 - **Never launch a local browser** — this skill only connects to an external browser via CDP
-- **Always use literal URL values** — read `CLOSEDBROWSER_URL` once, then use the actual value in all commands; never use `$CLOSEDBROWSER_URL` shell substitutions
+- **Always use literal URLs** — read `CLOSEDBROWSER_URL` once, then use the actual value in all commands; never use `$CLOSEDBROWSER_URL` shell substitution
+- **Never use tokens literally** — always use shell substitution (`$CLOSEDBROWSER_TOKEN`); never embed the token value directly in commands or URLs
 
-## Anti-Bot Protection (Headful + Stealth)
+## Query Parameters
 
-**When in doubt, use headful + stealth — it does no harm on unprotected sites.**
+Reference: [Browserless Launch Options](https://docs.browserless.io/baas/launch-options)
 
-For any site with bot detection (Cloudflare, DataDome, Akamai, CAPTCHAs, or unexpected blocks), append `/?headless=false&stealth=true` to the CDP URL.
+All query parameters are common to both agent-browser and browser-use. Append them to the CDP WebSocket URL after a trailing slash.
 
-**The trailing slash before `?` is critical** — without it the server returns 400.
+**Critical: Always use a trailing slash before query params** — without it the server returns 400.
 
 ```
 # Correct
@@ -58,7 +62,73 @@ ws://localhost:3000/?headless=false&stealth=true
 ws://localhost:3000?headless=false&stealth=true
 ```
 
+### Supported Parameters
+
+| Parameter | Description | Docs |
+|-----------|-------------|------|
+| `token` | Authorization token | ✅ |
+| `timeout` | Session timeout in ms (default 60000) | ✅ |
+| `blockAds` | Enable ad blocker (uBlock Origin) | ✅ |
+| `headless` | Run headless (`true`/`false`) — use `false` for bot protection | ✅ |
+| `stealth` | Enable stealth mode | ✅ |
+| `slowMo` | Delay between actions (ms) | ✅ |
+| `ignoreDefaultArgs` | Ignore default browser args | ✅ |
+| `acceptInsecureCerts` | Accept invalid SSL certs | ✅ |
+| `launch` | JSON launch options (URL/base64 encoded) | ✅ |
+
+### Chrome Flags (via `--` prefix)
+
+Any Chrome flag can be passed with `--` prefix:
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `--proxy-server` | Proxy server (host:port) | `?--proxy-server=proxy.com:8080` |
+| `--window-size` | Browser window size | `?--window-size=1920,1080` |
+| `--lang` | Browser language | `?--lang=en-US` |
+
+### Not Yet Supported
+
+These are in the docs but not implemented in this container:
+- `proxy`, `proxyCountry`, `proxyCity`, `proxySticky`, `proxyLocaleMatch`, `proxyPreset` — residential proxy features
+- `externalProxyServer` — custom proxy URL
+- `record`, `replay` — session recording
+- `profile` — authenticated profiles
+- `humanlike` — human behavior simulation
+- `blockConsentModals` — cookie consent blocking
+
+### Combining Parameters
+
+Parameters combine in order. Later params override earlier ones:
+
+```
+ws://localhost:3000/?headless=false&stealth=true&blockAds=true&timeout=120000
+```
+
+### The `launch` Parameter
+
+For complex configurations, use the `launch` parameter with a JSON object. Encode with URL encoding or base64:
+
+```bash
+# URL encoded
+?launch=%7B%22headless%22%3Afalse%2C%22stealth%22%3Atrue%2C%22args%22%3A%5B%22--window-size%3D1920%2C1080%22%5D%7D
+
+# base64 (simpler)
+?launch=eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdCI6dHJ1ZSwiYXJncyI6WyItLXdpbmRvdy1zaXplPTE5MjAsMTA4MCJdfQ==
+```
+
+JSON options: `headless`, `stealth`, `slowMo`, `ignoreDefaultArgs`, `acceptInsecureCerts`, `args` (Chrome flags array).
+
+For full details, see [Browserless Launch Options](https://docs.browserless.io/baas/launch-options).
+
+## Anti-Bot Protection (Headful + Stealth)
+
+**When in doubt, use headful + stealth — it does no harm on unprotected sites.**
+
+For any site with bot detection (Cloudflare, DataDome, Akamai, CAPTCHAs, or unexpected blocks), add `headless=false&stealth=true` to your URL.
+
 Always use both flags together — never just one.
+
+See **Query Parameters** section above for the full list of available options.
 
 ## Troubleshooting
 
@@ -66,7 +136,7 @@ Always use both flags together — never just one.
 |-------|--------|
 | Connection refused | Check URL, protocol (`ws://` vs `wss://`), and that the container is running. Try the other protocol. |
 | 400 Bad Request with query params | Missing trailing slash — use `ws://host:port/?...`, not `ws://host:port?...`. |
-| Site blocked / CAPTCHA | Close and reconnect with `/?headless=false&stealth=true` on the CDP URL. |
-| CDP connection dropped / session expired | Remote browser closed due to inactivity or session timeout. Add `timeout` query param to extend lifetime, e.g. `ws://localhost:3000/?headless=false&stealth=true&timeout=120000`. Increase further for long-running sessions. |
+| Site blocked / CAPTCHA | Close and reconnect with `headless=false&stealth=true` on the CDP URL. |
+| CDP connection dropped / session expired | Remote browser closed due to inactivity or session timeout. Add `timeout` query param to extend lifetime. See Query Parameters section. |
 
 See the tool-specific reference file for additional troubleshooting.
