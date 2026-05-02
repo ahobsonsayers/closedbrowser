@@ -49,14 +49,14 @@ Each feature or change gets its own branch. Never combine unrelated changes.
 
 1. `01-patch-browserless.sh` applies patches to browserless source via `git apply`
 2. `02-install-extensions.sh` downloads and installs extensions (uBlock Origin Lite, IDCAC)
-3. Patched browserless loads extensions from `GLOBAL_EXTENSIONS_DIR` (`$APP_DIR/extensions`) and `USER_EXTENSIONS_DIR` (`/user-extensions`)
+3. Patched browserless loads extensions from `GLOBAL_EXTENSIONS_DIR` (`$APP_DIR/extensions`) and `USER_EXTENSIONS_DIR` (`/data/extensions`)
 
 ## Browserless Key Learnings (hard-won)
 
 - **Headful mode**: `?headless=false&stealth=true` query param (not in JSON body)
 - **REST API `/content`**: Only accepts `headless` via query param, not JSON body
 - **Playwright routes** (`/chromium/playwright`) enforce User-Agent check; use Puppeteer/CDP routes for unrestricted access
-- **Extension loading**: `manifest.json` required in extension directory; mount to `/user-extensions/{name}/`
+- **Extension loading**: `manifest.json` required in extension directory; mount to `/data/extensions/{name}/`
 
 ## Code Style
 
@@ -73,17 +73,15 @@ Each feature or change gets its own branch. Never combine unrelated changes.
 | `HOST` | `localhost` | Listen address |
 | `PORT` | `3000` | Listen port |
 | `DEBUG` | `browserless*,-**:verbose` | Debug logging filter |
-| `DATA_DIR` | `/user-data` | Browser profile persistence |
-| `DOWNLOAD_DIR` | `/downloads` | Download directory |
 
 ## Common Tasks
 
 **Add built-in extension**: Update `scripts/02-install-extensions.sh` with `install_extension "owner/repo" "extension-name"`, then `task build`.
 
-**Add custom extension at runtime**: Mount to `/user-extensions/{name}/` in `compose.yaml` (requires `manifest.json`).
+**Add custom extension at runtime**: Mount to `/data/extensions/{name}/` in `compose.yaml` (requires `manifest.json`).
 
 **Add test script**: Create `tests/test-{name}.sh`, add task to `Taskfile.yaml` under `test:{name}:`, add to `test` task deps.
 
 **Debug bot detection**: `task run:daemon`, then `task test:rebrowser`. Compare results with `headless=false` vs `headless=true` query param.
 
-**Update patches**: Modify `patches/browsers.cdp.patch`, then `task build:no-cache` and verify extension loading.
+**Update patches**: Modify patches in `patches/`, then `task build:no-cache` and verify extension loading.

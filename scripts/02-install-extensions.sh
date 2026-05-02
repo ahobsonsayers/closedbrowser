@@ -43,5 +43,9 @@ install_extension() {
 rm -rf "$GLOBAL_EXTENSIONS_DIR"
 mkdir -p "$GLOBAL_EXTENSIONS_DIR"
 
+# Install extensions
 install_extension "OhMyGuus/I-Still-Dont-Care-About-Cookies" "isdcac"
 install_extension "NopeCHALLC/nopecha-extension" "nopecha"
+
+# Fix extensions directory permissions
+chown -R blessuser:blessuser "$GLOBAL_EXTENSIONS_DIR"

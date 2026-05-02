@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ -n "${EXTENSION_NOPECHA_API_KEY:-}" ]]; then
+# Create folder structure
+mkdir -p /data "$DATA_DIR" "$DOWNLOAD_DIR" "$USER_EXTENSIONS_DIR"
+chown -R blessuser:blessuser /data || true
+
+# Configure NopeCHA with API Key
+if [[ -n ${EXTENSION_NOPECHA_API_KEY:-} ]]; then
   MANIFEST="$GLOBAL_EXTENSIONS_DIR/nopecha/manifest.json"
   jq --arg key "$EXTENSION_NOPECHA_API_KEY" '.nopecha.key = $key' "$MANIFEST" > "${MANIFEST}.tmp"
   mv "${MANIFEST}.tmp" "$MANIFEST"
 fi
 
-exec /usr/src/app/scripts/start.sh "$@"
+# Run original base image entrypoint (as blessuser)
+exec gosu blessuser /usr/src/app/scripts/start.sh "$@"

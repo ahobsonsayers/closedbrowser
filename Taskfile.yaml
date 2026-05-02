@@ -4,7 +4,7 @@ version: "3"
 tasks:
   format:
     cmds:
-      - shfmt -w -i 2 -s **/*.sh
+      - shfmt -w -i 2 -sr -s **/*.sh
       - chmod +x **/*.sh
 
   lint:
@@ -21,7 +21,7 @@ tasks:
 
   run:init:
     cmds:
-      - mkdir -p ./data/user-data ./data/downloads
+      - mkdir -p ./data
 
   run:
     deps: [run:init]

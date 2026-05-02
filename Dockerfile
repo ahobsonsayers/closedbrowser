@@ -4,10 +4,15 @@ USER root
 
 # Directory environment variables.
 # It is recommend to not override these at run time.
-ENV DATA_DIR=/user-data
-ENV DOWNLOAD_DIR=/downloads
+ENV MOUNT_DIR=/data
+ENV DATA_DIR=$MOUNT_DIR/profiles
+ENV DOWNLOAD_DIR=$MOUNT_DIR/downloads
+
 ENV GLOBAL_EXTENSIONS_DIR=$APP_DIR/extensions
-ENV USER_EXTENSIONS_DIR=/user-extensions
+ENV USER_EXTENSIONS_DIR=$MOUNT_DIR/extensions
+
+# Install gosu
+COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
 
 # Add scripts and patches
 COPY scripts /tmp/scripts
@@ -21,11 +26,5 @@ RUN apt-get update && \
     /tmp/scripts/02-install-extensions.sh && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
-
-# Create directories and fix permissions
-RUN mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR" "$USER_EXTENSIONS_DIR" && \
-    chown -R blessuser:blessuser "$DATA_DIR" "$DOWNLOAD_DIR" "$GLOBAL_EXTENSIONS_DIR" "$USER_EXTENSIONS_DIR"
-
-USER blessuser
 
 ENTRYPOINT ["/usr/src/app/scripts/entrypoint.sh"]
