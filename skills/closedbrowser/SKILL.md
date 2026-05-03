@@ -24,7 +24,7 @@ echo "CLOSEDBROWSER_URL: $(printenv CLOSEDBROWSER_URL || echo NOT_SET)" && echo 
 - Has a port (e.g., `localhost:3000`) → `ws://` (local, no SSL)
 - No port (e.g., `browser.example.com`) → `wss://` (remote, SSL)
 - On connection failure, try the other protocol
-- If `CLOSEDBROWSER_TOKEN` is set, append as query param after trailing slash: `/?token=YOUR_TOKEN`
+- If `CLOSEDBROWSER_TOKEN` is set, append as query param after trailing slash: `/?token=$CLOSEDBROWSER_TOKEN` (use substitution, never literal)
 
 Then select a tool:
 
@@ -39,12 +39,51 @@ Then select a tool:
 - agent-browser: `brew install agent-browser` — see https://agent-browser.dev/installation
 - browser-use: `curl -fsSL https://browser-use.com/cli/install.sh | bash` — see https://docs.browser-use.com/open-source/browser-use-cli
 
+## CRITICAL SECURITY RULE: Variable Substitution
+
+**This is non-negotiable. Violating this exposes secrets in tool call logs.**
+
+### URL: Use LITERAL Value (NO substitution)
+
+Read `CLOSEDBROWSER_URL` once at startup, then use the **actual resolved value** in all commands:
+
+```bash
+# WRONG - variable expansion visible in tool output
+agent-browser --cdp "$CLOSEDBROWSER_URL" open https://example.com
+
+# CORRECT - resolve once, use literal value
+agent-browser --cdp ws://localhost:3000 open https://example.com
+```
+
+### Token: MUST Use $VAR Substitution (REQUIRED)
+
+**The token must NEVER appear in tool call output.** Always use shell substitution:
+
+```bash
+# WRONG - token exposed in tool output (SECURITY VIOLATION)
+agent-browser --cdp ws://localhost:3000/?token=abc123secret open https://example.com
+
+# WRONG - do not read token into a variable and use it literally
+TOKEN_VALUE=$(printenv CLOSEDBROWSER_TOKEN)
+agent-browser --cdp ws://localhost:3000/?token=$TOKEN_VALUE open https://example.com
+
+# CORRECT - use $CLOSEDBROWSER_TOKEN substitution
+agent-browser --cdp ws://localhost:3000/?token=$CLOSEDBROWSER_TOKEN open https://example.com
+```
+
+**Why this matters:** Tool call logs are persisted. Exposed tokens = security breach.
+
+### Quick Reference
+
+| Variable | Use In Commands | Why |
+|----------|-----------------|-----|
+| `CLOSEDBROWSER_URL` | Literal value (resolve once) | Not secret, but cleaner logs |
+| `CLOSEDBROWSER_TOKEN` | `$CLOSEDBROWSER_TOKEN` | NEVER exposed in output |
+
 ## Shared Rules
 
 - **Never install tools for the user** — only provide instructions
 - **Never launch a local browser** — this skill only connects to an external browser via CDP
-- **Always use literal URLs** — read `CLOSEDBROWSER_URL` once, then use the actual value in all commands; never use `$CLOSEDBROWSER_URL` shell substitution
-- **Never use tokens literally** — always use shell substitution (`$CLOSEDBROWSER_TOKEN`); never embed the token value directly in commands or URLs
 
 ## Query Parameters
 
