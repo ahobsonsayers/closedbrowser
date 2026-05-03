@@ -159,6 +159,91 @@ JSON options: `headless`, `stealth`, `slowMo`, `ignoreDefaultArgs`, `acceptInsec
 
 For full details, see [Browserless Launch Options](https://docs.browserless.io/baas/launch-options).
 
+## The `launch` Object
+
+The `launch` object is a JSON string passed as a single query parameter. Use it for browser-level options like `headless`, `stealth`, or array flags like `args: [...]`.
+
+### Launch Parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `args` | Array of Chrome command-line flags (see Chrome Flags section) | `[]` |
+| `headless` | Run browser headless. Set `false` for headful mode (helps bypass bot detection) | `true` |
+| `stealth` | Enable stealth mode to reduce automation signals | `false` |
+| `slowMo` | Delay between actions in milliseconds | `0` |
+| `ignoreDefaultArgs` | Ignore default browser args (boolean or array) | `false` |
+| `acceptInsecureCerts` | Accept invalid SSL certificates | `false` |
+
+### Encoding the `launch` Value
+
+**URL encoding:**
+```
+?launch=%7B%22headless%22%3Afalse%2C%22stealth%22%3Atrue%2C%22args%22%3A%5B%22--window-size%3D1920%2C1080%22%5D%7D
+```
+
+**Base64 (simpler):**
+```
+?launch=eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdCI6dHJ1ZSwiYXJncyI6WyItLXdpbmRvdy1zaXplPTE5MjAsMTA4MCJdfQ==
+```
+
+Decoded: `{"headless":false,"stealth":true,"args":["--window-size=1920,1080"]}`
+
+## Chrome Flags
+
+Chrome flags are passed via the `args` array inside the `launch` object.
+
+### Available Flags
+
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--window-size` | Browser window size | `"--window-size=1920,1080"` |
+| `--lang` | Browser language | `"--lang=en-US"` |
+| `--user-data-dir` | Profile directory for persistence | `"--user-data-dir=/data/profiles/my-session"` |
+| `--proxy-server` | Proxy server (host:port) | `"--proxy-server=proxy.com:8080"` |
+
+See [Chrome Command-Line Switches](https://peter.sh/experiments/chromium-command-line-switches/) for others.
+
+### Example: Multiple Flags
+
+```json
+{"headless":false,"stealth":true,"args":["--window-size=1920,1080","--lang=en-US"]}
+```
+
+**Base64:** `eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdGgiOnRydWUsImFyZ3MiOlsiLS13aW5kb3ctc2l6ZT0xOTIwLDEwODAiLCItLWxhbmc9ZW4tVVMiXX0K`
+
+For full details, see [Browserless Launch Options](https://docs.browserless.io/baas/launch-options).
+
+## Persistent Profiles (user-data-dir)
+
+Use the `--user-data-dir` Chrome flag to persist browser data (cookies, localStorage, etc.) across sessions. The container mounts profiles at `/data/profiles/<name>`.
+
+### Profile Directory Structure
+
+```
+/data/profiles/
+  my-session/      # Chrome profile directory
+  another-profile/ # Another profile
+```
+
+### Usage
+
+```json
+{"args":["--user-data-dir=/data/profiles/my-session"]}
+```
+
+**Base64:** `eyJhcmdzIjpbIi0tdXNlci1kYXRhLWRpcj0vZGF0YS9wcm9maWxlcy9teS1zZXNzaW9uIl19`
+
+Decoded: `{"args":["--user-data-dir=/data/profiles/my-session"]}`
+
+### Default Behavior (No Persistence)
+
+By default, closedbrowser automatically creates a temporary user-data-dir and disposes of it after disconnect — there is **no persistence**. Use `--user-data-dir` only when you need data to persist across sessions.
+
+### Notes
+
+- **Always use this when the user mentions a named session or profile**, or if they want persistence — ask them what to call it
+- Use different profile names for different users/sessions to avoid state pollution
+
 ## Anti-Bot Protection (Headful + Stealth)
 
 **When in doubt, use headful + stealth — it does no harm on unprotected sites.**
