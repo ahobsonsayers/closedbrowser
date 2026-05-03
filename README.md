@@ -18,10 +18,11 @@ See the skill at `skills/closedbrowser` for more details on setup.
 
 ### Skill config (environment variables)
 
-| Variable              | Required | Description                                                            |
-| --------------------- | -------- | ---------------------------------------------------------------------- |
-| `CLOSEDBROWSER_URL`   | Yes      | CDP endpoint URL (e.g., `localhost:3000` or `browser.example.com`)     |
-| `CLOSEDBROWSER_TOKEN` | No       | Token for authenticated containers (only if container has `TOKEN` set) |
+| Variable                      | Required | Description                                                            |
+| ----------------------------- | -------- | ---------------------------------------------------------------------- |
+| `CLOSEDBROWSER_URL`           | Yes      | CDP endpoint URL (e.g., `localhost:3000` or `browser.example.com`)     |
+| `CLOSEDBROWSER_TOKEN`         | No       | Token for authenticated containers (only if container has `TOKEN` set) |
+| `CLOSEDBROWSER_DEFAULT_PROFILE` | No     | Default profile for persistence (e.g., `my-profile`). Only one session can use a given profile at a time. |
 
 ### CDP URL
 

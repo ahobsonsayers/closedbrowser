@@ -13,8 +13,10 @@ Browser automation via CLI connecting to an external browser over CDP WebSocket.
 Run this single check before doing anything else:
 
 ```bash
-echo "CLOSEDBROWSER_URL: $(printenv CLOSEDBROWSER_URL || echo NOT_SET)" && echo "CLOSEDBROWSER_TOKEN: $(printenv CLOSEDBROWSER_TOKEN || echo NOT_SET)" && echo "agent-browser: $(which agent-browser 2>/dev/null || echo NOT_FOUND)" && echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
+printenv | grep ^CLOSEDBROWSER_ && echo "agent-browser: $(which agent-browser 2>/dev/null || echo NOT_FOUND)" && echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
 ```
+
+If any `CLOSEDBROWSER_*` vars appear in output, they are **not set**.
 
 **If CLOSEDBROWSER_URL is not set, stop and ask the user to set it.** Nothing else matters without it.
 
@@ -84,6 +86,7 @@ agent-browser --cdp ws://localhost:3000/?token=$CLOSEDBROWSER_TOKEN open https:/
 
 - **Never install tools for the user** — only provide instructions
 - **Never launch a local browser** — this skill only connects to an external browser via CDP
+- **Default profile**: If `CLOSEDBROWSER_DEFAULT_PROFILE` is set, use it by default (literal value, not substitution). Skip only when user explicitly says: no persistence, different profile, or no profile/session. **Only one session can use a given profile at a time** — don't run multiple agents with the same profile simultaneously.
 
 ## Query Parameters
 
