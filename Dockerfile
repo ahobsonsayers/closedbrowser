@@ -1,4 +1,4 @@
-FROM ghcr.io/browserless/chromium:v2.47.0
+FROM ghcr.io/browserless/chromium:v2.48.2
 
 USER root
 
