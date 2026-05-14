@@ -1,0 +1,29 @@
+diff --git a/scripts/start.sh b/scripts/start.sh
+index 8aaa801..5c0d4b6 100755
+--- a/scripts/start.sh
++++ b/scripts/start.sh
+@@ -7,6 +7,7 @@ set -e
+ 
+ _kill_procs() {
+   kill -TERM $node
++  kill -TERM $dashboard
+   kill -TERM $xvfb
+ }
+ 
+@@ -20,11 +21,16 @@ then
+   export DISPLAY=:99
+ fi
+ 
++agent-browser dashboard start --port 4848 >/dev/null 2>&1 &
++dashboard=$!
++
+ dumb-init -- node build/index.js $@ &
+ node=$!
+ 
+ wait $node
+ 
++wait $dashboard
++
+ if [ ! -z "$xvfb" ]
+ then
+   wait $xvfb

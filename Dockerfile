@@ -11,12 +11,18 @@ ENV DOWNLOAD_DIR=$MOUNT_DIR/downloads
 ENV GLOBAL_EXTENSIONS_DIR=$APP_DIR/extensions
 ENV USER_EXTENSIONS_DIR=$MOUNT_DIR/extensions
 
+ENV ENABLE_DEBUGGER=false
+
 # Install gosu
 COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
 
 # Add scripts and patches
 COPY scripts /tmp/scripts
 COPY patches /tmp/patches
+
+# Add our custom hooks
+COPY hooks $APP_DIR/external
+
 COPY scripts/entrypoint.sh /usr/src/app/scripts/entrypoint.sh
 
 # Setup browser
@@ -26,5 +32,8 @@ RUN apt-get update && \
     /tmp/scripts/02-install-extensions.sh && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
+
+# Install agent-browser
+RUN npm install -g agent-browser
 
 ENTRYPOINT ["/usr/src/app/scripts/entrypoint.sh"]
