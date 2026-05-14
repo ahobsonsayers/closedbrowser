@@ -2,6 +2,13 @@
 name: closedbrowser
 description: Browser automation using closedbrowser (containerized Chromium via CDP). Use when the user needs to automate browser tasks with a remote CDP endpoint, especially when CLOSEDBROWSER_URL is configured. Always use this skill when the user mentions closedbrowser, remote browser automation, CDP WebSocket connections, or browser automation with CLOSEDBROWSER_URL environment variable.
 allowed-tools: Bash(agent-browser:*), Bash(browser-use:*), Bash(echo:*), Bash(printenv:*), Bash(which:*)
+required_environment_variables:
+  - name: CLOSEDBROWSER_URL
+    prompt: ClosedBrowser WebSocket URL
+    help: WebSocket URL for connecting to ClosedBrowser (e.g., ws://localhost:3000)
+  - name: CLOSEDBROWSER_TOKEN
+    prompt: ClosedBrowser Auth Token
+    help: Token for authenticating to ClosedBrowser
 ---
 
 # closedbrowser automation
