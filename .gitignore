@@ -1,4 +1,6 @@
 # Ignore certain directories
+blitzbrowser/
+browserless/
 data/
 docs/superpowers/
 playground/
