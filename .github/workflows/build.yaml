@@ -11,6 +11,11 @@ on:
   schedule:
     - cron: "0 2 * * 0" # Every Sunday at 2am
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional custom tag to push (in addition to latest/version)"
+        required: false
+        default: ""
 
 env:
   DOCKER_IMAGE: arranhs/closedbrowser
@@ -118,11 +123,18 @@ jobs:
               '.digest | to_entries[] | "\($docker_image)@\(.value)"'
           )
 
-          docker buildx imagetools create \
-            -t "$DOCKER_IMAGE:latest" \
-            -t "$DOCKER_IMAGE:$BROWSERLESS_VERSION" \
-            $DIGESTS
+          if [ -n "$CUSTOM_TAG" ]; then
+            docker buildx imagetools create \
+              -t "$DOCKER_IMAGE:$CUSTOM_TAG" \
+              $DIGESTS
+          else
+            docker buildx imagetools create \
+              -t "$DOCKER_IMAGE:latest" \
+              -t "$DOCKER_IMAGE:$BROWSERLESS_VERSION" \
+              $DIGESTS
+          fi
         env:
           DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
           BROWSERLESS_VERSION: ${{ needs.get-version.outputs.browserless }}
           DIGESTS_JSON: ${{ steps.get-digests.outputs.result }}
+          CUSTOM_TAG: ${{ github.event.inputs.tag }}
