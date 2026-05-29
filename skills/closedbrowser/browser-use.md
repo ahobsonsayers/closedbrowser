@@ -47,7 +47,7 @@ Close and reconnect with stealth params on the CDP URL:
 
 ```bash
 browser-use --cdp-url <url> close
-browser-use --cdp-url "ws://localhost:3000/?headless=false&stealth=true" open <target-url>
+browser-use --cdp-url "ws://localhost:9999/?headless=false&stealth=true" open <target-url>
 ```
 
 ## Command Reference

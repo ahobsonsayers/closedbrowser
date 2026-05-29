@@ -5,7 +5,7 @@ allowed-tools: Bash(agent-browser:*), Bash(browser-use:*), Bash(echo:*), Bash(pr
 required_environment_variables:
   - name: CLOSEDBROWSER_URL
     prompt: ClosedBrowser WebSocket URL
-    help: WebSocket URL for connecting to ClosedBrowser (e.g., ws://localhost:3000)
+    help: WebSocket URL for connecting to ClosedBrowser (e.g., ws://localhost:9999)
   - name: CLOSEDBROWSER_TOKEN
     prompt: ClosedBrowser Auth Token
     help: Token for authenticating to ClosedBrowser
@@ -30,7 +30,7 @@ If any `CLOSEDBROWSER_*` vars appear in output, they are **not set**.
 **CLOSEDBROWSER_TOKEN is optional** — only required if the container was started with a `TOKEN` environment variable.
 
 **Normalize the URL if needed:**
-- Has a port (e.g., `localhost:3000`) → `ws://` (local, no SSL)
+- Has a port (e.g., `localhost:9999`) → `ws://` (local, no SSL)
 - No port (e.g., `browser.example.com`) → `wss://` (remote, SSL)
 - On connection failure, try the other protocol
 - If `CLOSEDBROWSER_TOKEN` is set, append as query param after trailing slash: `/?token=$CLOSEDBROWSER_TOKEN` (use substitution, never literal)
@@ -61,7 +61,7 @@ Read `CLOSEDBROWSER_URL` once at startup, then use the **actual resolved value**
 agent-browser --cdp "$CLOSEDBROWSER_URL" open https://example.com
 
 # CORRECT - resolve once, use literal value
-agent-browser --cdp ws://localhost:3000 open https://example.com
+agent-browser --cdp ws://localhost:9999 open https://example.com
 ```
 
 ### Token: MUST Use $VAR Substitution (REQUIRED)
@@ -70,14 +70,14 @@ agent-browser --cdp ws://localhost:3000 open https://example.com
 
 ```bash
 # WRONG - token exposed in tool output (SECURITY VIOLATION)
-agent-browser --cdp ws://localhost:3000/?token=abc123secret open https://example.com
+agent-browser --cdp ws://localhost:9999/?token=abc123secret open https://example.com
 
 # WRONG - do not read token into a variable and use it literally
 TOKEN_VALUE=$(printenv CLOSEDBROWSER_TOKEN)
-agent-browser --cdp ws://localhost:3000/?token=$TOKEN_VALUE open https://example.com
+agent-browser --cdp ws://localhost:9999/?token=$TOKEN_VALUE open https://example.com
 
 # CORRECT - use $CLOSEDBROWSER_TOKEN substitution
-agent-browser --cdp ws://localhost:3000/?token=$CLOSEDBROWSER_TOKEN open https://example.com
+agent-browser --cdp ws://localhost:9999/?token=$CLOSEDBROWSER_TOKEN open https://example.com
 ```
 
 **Why this matters:** Tool call logs are persisted. Exposed tokens = security breach.
@@ -105,10 +105,10 @@ All query parameters are common to both agent-browser and browser-use. Append th
 
 ```
 # Correct
-ws://localhost:3000/?headless=false&stealth=true
+ws://localhost:9999/?headless=false&stealth=true
 
 # WRONG — missing slash, will 400
-ws://localhost:3000?headless=false&stealth=true
+ws://localhost:9999?headless=false&stealth=true
 ```
 
 ### Supported Parameters
@@ -150,7 +150,7 @@ These are in the docs but not implemented in this container:
 Parameters combine in order. Later params override earlier ones:
 
 ```
-ws://localhost:3000/?headless=false&stealth=true&blockAds=true&timeout=120000
+ws://localhost:9999/?headless=false&stealth=true&blockAds=true&timeout=120000
 ```
 
 ### The `launch` Parameter

@@ -12,14 +12,14 @@
 Pass `--cdp` with the full WebSocket URL on every command:
 
 ```bash
-agent-browser --cdp ws://localhost:3000 open https://example.com
-agent-browser --cdp ws://localhost:3000 snapshot -i
-agent-browser --cdp ws://localhost:3000 click @e1
+agent-browser --cdp ws://localhost:9999 open https://example.com
+agent-browser --cdp ws://localhost:9999 snapshot -i
+agent-browser --cdp ws://localhost:9999 click @e1
 ```
 
 `--cdp` accepts a port number or full URL:
 - Port: `--cdp 9222` (connects to `localhost:9222`)
-- URL: `--cdp ws://localhost:3000` or `--cdp wss://browser.example.com`
+- URL: `--cdp ws://localhost:9999` or `--cdp wss://browser.example.com`
 
 ## Anti-Bot Reconnect
 
@@ -27,7 +27,7 @@ Close and reconnect with stealth params on the CDP URL:
 
 ```bash
 agent-browser --cdp <url> close
-agent-browser --cdp "ws://localhost:3000/?headless=false&stealth=true" open <target-url>
+agent-browser --cdp "ws://localhost:9999/?headless=false&stealth=true" open <target-url>
 ```
 
 ## Workflow

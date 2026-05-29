@@ -20,7 +20,7 @@ See the skill at `skills/closedbrowser` for more details on setup.
 
 | Variable                      | Required | Description                                                            |
 | ----------------------------- | -------- | ---------------------------------------------------------------------- |
-| `CLOSEDBROWSER_URL`           | Yes      | CDP endpoint URL (e.g., `localhost:3000` or `browser.example.com`)     |
+| `CLOSEDBROWSER_URL`           | Yes      | CDP endpoint URL (e.g., `localhost:9999` or `browser.example.com`)     |
 | `CLOSEDBROWSER_TOKEN`         | No       | Token for authenticated containers (only if container has `TOKEN` set) |
 | `CLOSEDBROWSER_DEFAULT_PROFILE` | No     | Default profile for persistence (e.g., `my-profile`). Only one session can use a given profile at a time. |
 
@@ -29,20 +29,20 @@ See the skill at `skills/closedbrowser` for more details on setup.
 The skill constructs a CDP URL to connect to the browser. The base format is:
 
 ```
-ws://localhost:3000/
+ws://localhost:9999/
 wss://browser.example.com/
 ```
 
 If `CLOSEDBROWSER_TOKEN` is set, it's appended as a query param:
 
 ```
-ws://localhost:3000/?token=YOUR_TOKEN
+ws://localhost:9999/?token=YOUR_TOKEN
 ```
 
 For sites with bot detection (Cloudflare, DataDome, etc.), the skill can add `headless=false&stealth=true` to enable headful mode with stealth flags:
 
 ```
-ws://localhost:3000/?headless=false&stealth=true
+ws://localhost:9999/?headless=false&stealth=true
 ```
 
 ## Running
@@ -55,7 +55,7 @@ docker compose up -d
 
 | Port   | Description     |
 | ------ | --------------- |
-| `3000` | Browserless API |
+| `9999` | BlitzBrowser API |
 
 ## Volumes
 
@@ -105,7 +105,7 @@ The standard Browserless configuration environment variables can be seen below, 
 | Variable | Default                    | Description          |
 | -------- | -------------------------- | -------------------- |
 | `HOST`   | `localhost`                | Listen address       |
-| `PORT`   | `3000`                     | Listen port          |
+| `PORT`   | `9999`                     | Listen port          |
 | `DEBUG`  | `browserless*,-**:verbose` | Debug logging filter |
 
 ### Security
@@ -192,7 +192,7 @@ The standard Browserless configuration environment variables can be seen below, 
 
 Useful endpoints to be aware of. See `/docs/` for full API details.
 
-**Note:** When using WebSocket routes with query parameters, always add a trailing slash before the `?` (e.g., `ws://host:3000/?headless=false`).
+**Note:** When using WebSocket routes with query parameters, always add a trailing slash before the `?` (e.g., `ws://host:9999/?headless=false`).
 
 | Route                  | Description                                |
 | ---------------------- | ------------------------------------------ |
@@ -213,7 +213,7 @@ Reference: [Browserless Launch Options](https://docs.browserless.io/baas/launch-
 Append query params to the WebSocket URL after a trailing slash:
 
 ```
-ws://localhost:3000/?headless=false&stealth=true&timeout=120000
+ws://localhost:9999/?headless=false&stealth=true&timeout=120000
 ```
 
 ### Supported Parameters

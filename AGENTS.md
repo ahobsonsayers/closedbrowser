@@ -26,7 +26,7 @@ task test:sannysoft     # Run Sannysoft bot detection test
 task test:creepjs       # Run CreepJS bot detection test
 ```
 
-**Prerequisites**: `htmlq` (HTML parser: `go install github.com/ericchiang/pup@latest`), `browser-use` CLI, container running on `localhost:3000`.
+**Prerequisites**: `htmlq` (HTML parser: `go install github.com/ericchiang/pup@latest`), `browser-use` CLI, container running on `localhost:9999`.
 
 **compose.yaml**: `shm_size: 1g` is required — without it Chrome crashes.
 
@@ -71,7 +71,7 @@ Each feature or change gets its own branch. Never combine unrelated changes.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `HOST` | `localhost` | Listen address |
-| `PORT` | `3000` | Listen port |
+| `PORT` | `9999` | Listen port |
 | `DEBUG` | `browserless*,-**:verbose` | Debug logging filter |
 
 ## Common Tasks
