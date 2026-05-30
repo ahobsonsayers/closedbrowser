@@ -10,14 +10,14 @@
 browser-use does NOT persist connections — pass `--cdp-url` on every command:
 
 ```bash
-browser-use --cdp-url ws://localhost:9222 open https://example.com
-browser-use --cdp-url ws://localhost:9222 state    # must repeat URL
-browser-use --cdp-url ws://localhost:9222 click 5   # must repeat URL
+browser-use --cdp-url ws://localhost:9999 open https://example.com
+browser-use --cdp-url ws://localhost:9999 state    # must repeat URL
+browser-use --cdp-url ws://localhost:9999 click 5   # must repeat URL
 ```
 
-`--cdp-url` accepts both `ws://` and `http://` URLs:
-- `ws://localhost:9222` or `wss://browser.example.com`
-- `http://localhost:9222` (auto-discovers WebSocket endpoint)
+`--cdp-url` accepts a port number or full URL:
+- Port: `--cdp-url 9222` (connects to `localhost:9222`)
+- URL: `--cdp-url ws://localhost:9999` or `--cdp-url wss://browser.example.com`
 
 To close:
 
@@ -40,15 +40,6 @@ browser-use --cdp-url <url> close
 ```
 
 **Always run `state` before interacting with elements.** Returns page URL, title, and clickable elements with numeric indices.
-
-## Anti-Bot Reconnect
-
-Close and reconnect with stealth params on the CDP URL:
-
-```bash
-browser-use --cdp-url <url> close
-browser-use --cdp-url "ws://localhost:9999/?headless=false&stealth=true" open <target-url>
-```
 
 ## Command Reference
 
@@ -115,8 +106,9 @@ browser-use close --all                            # hard reset all sessions
 
 ## Troubleshooting
 
-See SKILL.md for shared troubleshooting (connection refused, 400 errors, CAPTCHA, missing env var).
+See SKILL.md for shared troubleshooting (connection refused, 400 errors, 401 Unauthorized, session timeouts).
 
 | Error | Action |
 |-------|--------|
 | Invalid element index / Element not found | Re-run `state` after page changes. |
+| 401 Unauthorized | Verify `$CLOSEDBROWSER_API_KEY` is correct |

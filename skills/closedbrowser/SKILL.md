@@ -6,9 +6,9 @@ required_environment_variables:
   - name: CLOSEDBROWSER_URL
     prompt: ClosedBrowser WebSocket URL
     help: WebSocket URL for connecting to ClosedBrowser (e.g., ws://localhost:9999)
-  - name: CLOSEDBROWSER_TOKEN
-    prompt: ClosedBrowser Auth Token
-    help: Token for authenticating to ClosedBrowser
+  - name: CLOSEDBROWSER_API_KEY
+    prompt: ClosedBrowser API Key
+    help: API key for authenticating to the ClosedBrowser container
 ---
 
 # closedbrowser automation
@@ -27,13 +27,12 @@ If any `CLOSEDBROWSER_*` vars appear in output, they are **not set**.
 
 **If CLOSEDBROWSER_URL is not set, stop and ask the user to set it.** Nothing else matters without it.
 
-**CLOSEDBROWSER_TOKEN is optional** — only required if the container was started with a `TOKEN` environment variable.
+**CLOSEDBROWSER_API_KEY is optional** — only required if the container was started with `API_KEY` set.
 
 **Normalize the URL if needed:**
 - Has a port (e.g., `localhost:9999`) → `ws://` (local, no SSL)
 - No port (e.g., `browser.example.com`) → `wss://` (remote, SSL)
 - On connection failure, try the other protocol
-- If `CLOSEDBROWSER_TOKEN` is set, append as query param after trailing slash: `/?token=$CLOSEDBROWSER_TOKEN` (use substitution, never literal)
 
 Then select a tool:
 
@@ -64,30 +63,30 @@ agent-browser --cdp "$CLOSEDBROWSER_URL" open https://example.com
 agent-browser --cdp ws://localhost:9999 open https://example.com
 ```
 
-### Token: MUST Use $VAR Substitution (REQUIRED)
+### API Key: MUST Use $VAR Substitution (REQUIRED)
 
-**The token must NEVER appear in tool call output.** Always use shell substitution:
+**The API key must NEVER appear in tool call output.** Always use shell substitution:
 
 ```bash
-# WRONG - token exposed in tool output (SECURITY VIOLATION)
-agent-browser --cdp ws://localhost:9999/?token=abc123secret open https://example.com
+# WRONG - API key exposed in tool output (SECURITY VIOLATION)
+agent-browser --cdp ws://localhost:9999/?apiKey=abc123secret open https://example.com
 
-# WRONG - do not read token into a variable and use it literally
-TOKEN_VALUE=$(printenv CLOSEDBROWSER_TOKEN)
-agent-browser --cdp ws://localhost:9999/?token=$TOKEN_VALUE open https://example.com
+# WRONG - do not read API key into a variable and use it literally
+API_KEY_VALUE=$(printenv CLOSEDBROWSER_API_KEY)
+agent-browser --cdp ws://localhost:9999/?apiKey=$API_KEY_VALUE open https://example.com
 
-# CORRECT - use $CLOSEDBROWSER_TOKEN substitution
-agent-browser --cdp ws://localhost:9999/?token=$CLOSEDBROWSER_TOKEN open https://example.com
+# CORRECT - use $CLOSEDBROWSER_API_KEY substitution
+agent-browser --cdp ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY open https://example.com
 ```
 
-**Why this matters:** Tool call logs are persisted. Exposed tokens = security breach.
+**Why this matters:** Tool call logs are persisted. Exposed API keys = security breach.
 
 ### Quick Reference
 
 | Variable | Use In Commands | Why |
 |----------|-----------------|-----|
 | `CLOSEDBROWSER_URL` | Literal value (resolve once) | Not secret, but cleaner logs |
-| `CLOSEDBROWSER_TOKEN` | `$CLOSEDBROWSER_TOKEN` | NEVER exposed in output |
+| `CLOSEDBROWSER_API_KEY` | `$CLOSEDBROWSER_API_KEY` | NEVER exposed in output |
 
 ## Shared Rules
 
@@ -97,172 +96,50 @@ agent-browser --cdp ws://localhost:9999/?token=$CLOSEDBROWSER_TOKEN open https:/
 
 ## Query Parameters
 
-Reference: [Browserless Launch Options](https://docs.browserless.io/baas/launch-options)
-
 All query parameters are common to both agent-browser and browser-use. Append them to the CDP WebSocket URL after a trailing slash.
 
 **Critical: Always use a trailing slash before query params** — without it the server returns 400.
 
 ```
 # Correct
-ws://localhost:9999/?headless=false&stealth=true
+ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=default&liveView=true
 
 # WRONG — missing slash, will 400
-ws://localhost:9999?headless=false&stealth=true
+ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=default&liveView=true
 ```
 
 ### Supported Parameters
 
-| Parameter | Description | Docs |
-|-----------|-------------|------|
-| `token` | Authorization token | ✅ |
-| `timeout` | Session timeout in ms (default 60000) | ✅ |
-| `blockAds` | Enable ad blocker (uBlock Origin) | ✅ |
-| `headless` | Run headless (`true`/`false`) — use `false` for bot protection | ✅ |
-| `stealth` | Enable stealth mode | ✅ |
-| `slowMo` | Delay between actions (ms) | ✅ |
-| `ignoreDefaultArgs` | Ignore default browser args | ✅ |
-| `acceptInsecureCerts` | Accept invalid SSL certs | ✅ |
-| `launch` | JSON launch options (URL/base64 encoded) | ✅ |
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `apiKey` | API key for authentication | Only if container has `API_KEY` set |
+| `userDataId` | Session ID for persisting browser data (cookies, localStorage) | Optional |
+| `liveView` | Enable live view for real-time interaction | Optional |
+| `timezone` | Override browser timezone (not recommended) | Optional |
+| `proxyUrl` | HTTP proxy URL: `http://user:pass@host:port` | Optional |
+| `browserVersion` | Chrome version: `default`, `latest`, or specific version | Optional |
+| `userDataReadOnly` | Use user data without saving changes (`true`/`false`) | Optional |
 
-### Chrome Flags (via `--` prefix)
+### User Data (Sessions)
 
-Any Chrome flag can be passed with `--` prefix:
+Use `userDataId` to persist browser sessions:
+- Same `userDataId` reuses cookies, localStorage, etc.
+- Different ID for fresh session
+- Valid pattern: `/^[a-zA-Z0-9-_]{1,64}$/`
+- User data is downloaded before starting and saved at the end of the session
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `--proxy-server` | Proxy server (host:port) | `?--proxy-server=proxy.com:8080` |
-| `--window-size` | Browser window size | `?--window-size=1920,1080` |
-| `--lang` | Browser language | `?--lang=en-US` |
-
-### Not Yet Supported
-
-These are in the docs but not implemented in this container:
-- `proxy`, `proxyCountry`, `proxyCity`, `proxySticky`, `proxyLocaleMatch`, `proxyPreset` — residential proxy features
-- `externalProxyServer` — custom proxy URL
-- `record`, `replay` — session recording
-- `profile` — authenticated profiles
-- `humanlike` — human behavior simulation
-- `blockConsentModals` — cookie consent blocking
-
-### Combining Parameters
-
-Parameters combine in order. Later params override earlier ones:
+### Examples
 
 ```
-ws://localhost:9999/?headless=false&stealth=true&blockAds=true&timeout=120000
+# Basic connection
+ws://localhost:9999/
+
+# With authentication and session
+ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=abc&liveView=true
+
+# With proxy
+ws://localhost:9999/?proxyUrl=http://user:pass@proxy.com:1080&userDataId=123
 ```
-
-### The `launch` Parameter
-
-For complex configurations, use the `launch` parameter with a JSON object. Encode with URL encoding or base64:
-
-```bash
-# URL encoded
-?launch=%7B%22headless%22%3Afalse%2C%22stealth%22%3Atrue%2C%22args%22%3A%5B%22--window-size%3D1920%2C1080%22%5D%7D
-
-# base64 (simpler)
-?launch=eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdCI6dHJ1ZSwiYXJncyI6WyItLXdpbmRvdy1zaXplPTE5MjAsMTA4MCJdfQ==
-```
-
-JSON options: `headless`, `stealth`, `slowMo`, `ignoreDefaultArgs`, `acceptInsecureCerts`, `args` (Chrome flags array).
-
-For full details, see [Browserless Launch Options](https://docs.browserless.io/baas/launch-options).
-
-## The `launch` Object
-
-The `launch` object is a JSON string passed as a single query parameter. Use it for browser-level options like `headless`, `stealth`, or array flags like `args: [...]`.
-
-### Launch Parameters
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `args` | Array of Chrome command-line flags (see Chrome Flags section) | `[]` |
-| `headless` | Run browser headless. Set `false` for headful mode (helps bypass bot detection) | `true` |
-| `stealth` | Enable stealth mode to reduce automation signals | `false` |
-| `slowMo` | Delay between actions in milliseconds | `0` |
-| `ignoreDefaultArgs` | Ignore default browser args (boolean or array) | `false` |
-| `acceptInsecureCerts` | Accept invalid SSL certificates | `false` |
-
-### Encoding the `launch` Value
-
-**URL encoding:**
-```
-?launch=%7B%22headless%22%3Afalse%2C%22stealth%22%3Atrue%2C%22args%22%3A%5B%22--window-size%3D1920%2C1080%22%5D%7D
-```
-
-**Base64 (simpler):**
-```
-?launch=eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdCI6dHJ1ZSwiYXJncyI6WyItLXdpbmRvdy1zaXplPTE5MjAsMTA4MCJdfQ==
-```
-
-Decoded: `{"headless":false,"stealth":true,"args":["--window-size=1920,1080"]}`
-
-## Chrome Flags
-
-Chrome flags are passed via the `args` array inside the `launch` object.
-
-### Available Flags
-
-| Flag | Description | Example |
-|------|-------------|---------|
-| `--window-size` | Browser window size | `"--window-size=1920,1080"` |
-| `--lang` | Browser language | `"--lang=en-US"` |
-| `--user-data-dir` | Profile directory for persistence | `"--user-data-dir=/data/profiles/my-session"` |
-| `--proxy-server` | Proxy server (host:port) | `"--proxy-server=proxy.com:8080"` |
-
-See [Chrome Command-Line Switches](https://peter.sh/experiments/chromium-command-line-switches/) for others.
-
-### Example: Multiple Flags
-
-```json
-{"headless":false,"stealth":true,"args":["--window-size=1920,1080","--lang=en-US"]}
-```
-
-**Base64:** `eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdGgiOnRydWUsImFyZ3MiOlsiLS13aW5kb3ctc2l6ZT0xOTIwLDEwODAiLCItLWxhbmc9ZW4tVVMiXX0K`
-
-For full details, see [Browserless Launch Options](https://docs.browserless.io/baas/launch-options).
-
-## Persistent Profiles (user-data-dir)
-
-Use the `--user-data-dir` Chrome flag to persist browser data (cookies, localStorage, etc.) across sessions. The container mounts profiles at `/data/profiles/<name>`.
-
-### Profile Directory Structure
-
-```
-/data/profiles/
-  my-session/      # Chrome profile directory
-  another-profile/ # Another profile
-```
-
-### Usage
-
-```json
-{"args":["--user-data-dir=/data/profiles/my-session"]}
-```
-
-**Base64:** `eyJhcmdzIjpbIi0tdXNlci1kYXRhLWRpcj0vZGF0YS9wcm9maWxlcy9teS1zZXNzaW9uIl19`
-
-Decoded: `{"args":["--user-data-dir=/data/profiles/my-session"]}`
-
-### Default Behavior (No Persistence)
-
-By default, closedbrowser automatically creates a temporary user-data-dir and disposes of it after disconnect — there is **no persistence**. Use `--user-data-dir` only when you need data to persist across sessions.
-
-### Notes
-
-- **Always use this when the user mentions a named session or profile**, or if they want persistence — ask them what to call it
-- Use different profile names for different users/sessions to avoid state pollution
-
-## Anti-Bot Protection (Headful + Stealth)
-
-**When in doubt, use headful + stealth — it does no harm on unprotected sites.**
-
-For any site with bot detection (Cloudflare, DataDome, Akamai, CAPTCHAs, or unexpected blocks), add `headless=false&stealth=true` to your URL.
-
-Always use both flags together — never just one.
-
-See **Query Parameters** section above for the full list of available options.
 
 ## Troubleshooting
 
@@ -270,7 +147,9 @@ See **Query Parameters** section above for the full list of available options.
 |-------|--------|
 | Connection refused | Check URL, protocol (`ws://` vs `wss://`), and that the container is running. Try the other protocol. |
 | 400 Bad Request with query params | Missing trailing slash — use `ws://host:port/?...`, not `ws://host:port?...`. |
-| Site blocked / CAPTCHA | Close and reconnect with `headless=false&stealth=true` on the CDP URL. |
-| CDP connection dropped / session expired | Remote browser closed due to inactivity or session timeout. Add `timeout` query param to extend lifetime. See Query Parameters section. |
+| 401 Unauthorized | Missing or invalid `apiKey` — verify `$CLOSEDBROWSER_API_KEY` |
+| "Session is already running with different config" | Use different `userDataId` or close existing session first |
+| CDP connection dropped / session expired | Remote browser closed due to inactivity. Check container logs. |
+| Live view not working | Ensure `liveView=true` in URL params |
 
 See the tool-specific reference file for additional troubleshooting.

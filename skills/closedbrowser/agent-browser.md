@@ -21,15 +21,6 @@ agent-browser --cdp ws://localhost:9999 click @e1
 - Port: `--cdp 9222` (connects to `localhost:9222`)
 - URL: `--cdp ws://localhost:9999` or `--cdp wss://browser.example.com`
 
-## Anti-Bot Reconnect
-
-Close and reconnect with stealth params on the CDP URL:
-
-```bash
-agent-browser --cdp <url> close
-agent-browser --cdp "ws://localhost:9999/?headless=false&stealth=true" open <target-url>
-```
-
 ## Workflow
 
 ```bash
@@ -116,8 +107,9 @@ agent-browser --cdp <url> cookies clear            # Clear cookies
 
 ## Troubleshooting
 
-See SKILL.md for shared troubleshooting (connection refused, 400 errors, CAPTCHA, session timeouts).
+See SKILL.md for shared troubleshooting (connection refused, 400 errors, 401 Unauthorized, session timeouts).
 
 | Error | Action |
 |-------|--------|
 | Stale @refs | Re-run `snapshot -i` after page changes. |
+| 401 Unauthorized | Verify `$CLOSEDBROWSER_API_KEY` is correct |
