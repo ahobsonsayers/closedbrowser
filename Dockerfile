@@ -1,4 +1,5 @@
-FROM ghcr.io/blitzbrowser/blitzbrowser:latest
+ARG BLITZBROWSER_DIGEST=sha256:e55df2057ad9087931a6871e3b8aac9a5ad24cac267b710cc6029812eb456087
+FROM ghcr.io/blitzbrowser/blitzbrowser:latest@${BLITZBROWSER_DIGEST}
 
 USER root
 

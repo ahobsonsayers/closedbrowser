@@ -8,8 +8,6 @@ on:
       - .github/workflows/build.yaml
       - Dockerfile
       - scripts/**
-  schedule:
-    - cron: "0 2 * * 0" # Every Sunday at 2am
   workflow_dispatch:
     inputs:
       tag:
@@ -21,31 +19,6 @@ env:
   DOCKER_IMAGE: arranhs/closedbrowser
 
 jobs:
-  get-version:
-    name: Get version
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      browserless: ${{ steps.get-version.outputs.browserless }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Get version
-        id: get-version
-        run: |
-          BROWSERLESS_VERSION=$(
-            grep "^FROM ghcr.io/browserless/chromium" Dockerfile |
-            cut -d ':' -f2
-          )
-
-          echo "browserless=$BROWSERLESS_VERSION" >> $GITHUB_OUTPUT
-
-          echo "
-          Browserless version: $BROWSERLESS_VERSION
-          "
-
   build:
     name: Build Image
     runs-on: ${{ matrix.runner }}
@@ -96,7 +69,7 @@ jobs:
   push-tags:
     name: Push Tags
     runs-on: ubuntu-latest
-    needs: [get-version, build]
+    needs: [build]
     timeout-minutes: 10
 
     steps:
@@ -130,11 +103,9 @@ jobs:
           else
             docker buildx imagetools create \
               -t "$DOCKER_IMAGE:latest" \
-              -t "$DOCKER_IMAGE:$BROWSERLESS_VERSION" \
               $DIGESTS
           fi
         env:
           DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
-          BROWSERLESS_VERSION: ${{ needs.get-version.outputs.browserless }}
           DIGESTS_JSON: ${{ steps.get-digests.outputs.result }}
           CUSTOM_TAG: ${{ github.event.inputs.tag }}
