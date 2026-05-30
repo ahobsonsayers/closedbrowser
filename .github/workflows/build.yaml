@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Optional custom tag to push (in addition to latest/version)"
+        description: Custom tag to push
         required: false
         default: ""
 
