@@ -1,6 +1,6 @@
 # closedbrowser
 
-A containerised Chromium browser built on [browserless](https://github.com/browserless/browserless), with uBlock Origin and I Still Don't Care About Cookies pre-installed.
+A containerised Chromium browser built on [BlitzBrowser](https://github.com/blitzbrowser/blitzbrowser), with uBlock Origin and I Still Don't Care About Cookies pre-installed.
 
 ## Usage
 
@@ -87,7 +87,7 @@ To add your own, drop an unpacked extension directory (must contain a `manifest.
 
 ## Environment variables
 
-ClosedBrowser has environment variables that are both unique/specific to this image and inherited from the base Browserless image.
+ClosedBrowser has environment variables that are both unique/specific to this image and inherited from the base BlitzBrowser image.
 
 ### ClosedBrowser environment variables
 
@@ -96,17 +96,16 @@ ClosedBrowser has environment variables that are both unique/specific to this im
 | `EXTENSION_UBLOCK_ENABLED`  | `true`  | Enable uBlock Origin Lite by default (`true`/`false`)      |
 | `EXTENSION_NOPECHA_API_KEY` | —       | NopeCHA extension API key (optional, 100 free credits/24h) |
 
-### Browserless environment variables
+### BlitzBrowser environment variables
 
-The standard Browserless configuration environment variables can be seen below, as found in [config.ts](https://github.com/browserless/browserless/blob/main/src/config.ts).
+The standard BlitzBrowser configuration environment variables can be seen in the [BlitzBrowser documentation](https://docs.blitzbrowser.com).
 
 ### Server
 
-| Variable | Default                    | Description          |
-| -------- | -------------------------- | -------------------- |
-| `HOST`   | `localhost`                | Listen address       |
-| `PORT`   | `9999`                     | Listen port          |
-| `DEBUG`  | `browserless*,-**:verbose` | Debug logging filter |
+| Variable | Default     | Description     |
+| -------- | ----------- | --------------- |
+| `HOST`   | `localhost` | Listen address  |
+| `PORT`   | `9999`      | Listen port     |
 
 ### Security
 
@@ -190,58 +189,11 @@ The standard Browserless configuration environment variables can be seen below, 
 
 ## Routes
 
-Useful endpoints to be aware of. See `/docs/` for full API details.
-
-**Note:** When using WebSocket routes with query parameters, always add a trailing slash before the `?` (e.g., `ws://host:9999/?headless=false`).
+Useful endpoints to be aware of. See the [BlitzBrowser documentation](https://docs.blitzbrowser.com) for full API details.
 
 | Route                  | Description                                |
 | ---------------------- | ------------------------------------------ |
 | `/`                    | Chromium browser WebSocket (Puppeteer/CDP) |
-| `/chromium`            | Alias for `/`                              |
-| `/chromium/playwright` | Playwright Chromium WebSocket              |
-| `/docs`                | API documentation (interactive)            |
-| `/debugger`            | Built-in Chrome DevTools debugger          |
-| `/metrics`             | Browserless metrics                        |
-| `/chromium/screenshot` | Screenshot REST API                        |
-| `/chromium/content`    | Content extraction REST API                |
-| `/chromium/pdf`        | PDF generation REST API                    |
+| `/browser-instances`   | Browser instance events WebSocket            |
 
-## Query Parameters
 
-Reference: [Browserless Launch Options](https://docs.browserless.io/baas/launch-options)
-
-Append query params to the WebSocket URL after a trailing slash:
-
-```
-ws://localhost:9999/?headless=false&stealth=true&timeout=120000
-```
-
-### Supported Parameters
-
-| Parameter             | Description                                                    | Example                     |
-| --------------------- | -------------------------------------------------------------- | --------------------------- |
-| `token`               | Authorization token                                            | `?token=YOUR_TOKEN`         |
-| `timeout`             | Session timeout in ms (default 60000)                          | `?timeout=120000`           |
-| `blockAds`            | Enable ad blocker (uBlock Origin)                              | `?blockAds=true`            |
-| `headless`            | Run headless (`true`/`false`) — use `false` for bot protection | `?headless=false`           |
-| `stealth`             | Enable stealth mode                                            | `?stealth=true`             |
-| `slowMo`              | Delay between actions (ms)                                     | `?slowMo=100`               |
-| `ignoreDefaultArgs`   | Ignore default browser args                                    | `?ignoreDefaultArgs=true`   |
-| `acceptInsecureCerts` | Accept invalid SSL certs                                       | `?acceptInsecureCerts=true` |
-| `launch`              | JSON launch options (URL/base64 encoded)                       | `?launch=...`               |
-
-### Chrome Flags (via `--` prefix)
-
-| Parameter        | Description              | Example                          |
-| ---------------- | ------------------------ | -------------------------------- |
-| `--proxy-server` | Proxy server (host:port) | `?--proxy-server=proxy.com:8080` |
-| `--window-size`  | Browser window size      | `?--window-size=1920,1080`       |
-| `--lang`         | Browser language         | `?--lang=en-US`                  |
-
-### Not Yet Supported
-
-These are in the Browserless docs but not implemented:
-- `proxy`, `proxyCountry`, `proxyCity`, `proxySticky` — residential proxy features
-- `record`, `replay` — session recording
-- `profile` — authenticated profiles
-- `humanlike` — human behavior simulation |
