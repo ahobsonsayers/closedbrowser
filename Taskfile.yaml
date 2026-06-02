@@ -13,11 +13,15 @@ tasks:
 
   build:
     cmds:
-      - docker build . --tag arranhs/closedbrowser:latest
+      - docker build -f api.dockerfile . --tag arranhs/closedbrowser:latest
 
   build:no-cache:
     cmds:
-      - docker build . --tag arranhs/closedbrowser:latest --no-cache
+      - docker build -f api.dockerfile . --tag arranhs/closedbrowser:latest --no-cache
+
+  build:app:
+    cmds:
+      - docker build -f app.dockerfile . --tag arranhs/closedbrowser-app:latest
 
   run:init:
     cmds:

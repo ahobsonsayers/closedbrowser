@@ -1,0 +1,11 @@
+--- a/dashboard/src/lib/api.ts
++++ b/dashboard/src/lib/api.ts
+@@ -6,7 +6,7 @@
+ const api_key_param = blitzbrowser_api.api_key ? `apiKey=${blitzbrowser_api.api_key}` : '';
+ 
+ const api_url = new URL(blitzbrowser_api.url);
+-const websocket_url = new URL(`${api_url.protocol === 'https' ? 'wss' : 'ws'}://${api_url.host}`);
++const websocket_url = new URL(`${api_url.protocol === 'https:' ? 'wss' : 'ws'}://${api_url.host}`);
+ 
+ export interface BrowserPool {
+     id: string;
