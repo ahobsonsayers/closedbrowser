@@ -13,9 +13,9 @@ jobs:
     with:
       app-name: Blitzbrowser
       dockerfile: api.dockerfile
-      version-arg: BLITZBROWSER_DIGEST
-      version-source: docker-digest
-      version-source-docker-image: ghcr.io/blitzbrowser/blitzbrowser:latest
+      version-arg: BLITZBROWSER_COMMIT
+      version-source: github-commit
+      version-source-github-repo: blitzbrowser/blitzbrowser
 
   update-app:
     name: Update app image
