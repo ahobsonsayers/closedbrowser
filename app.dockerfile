@@ -18,7 +18,7 @@ RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
 
 # Apply patch
 COPY patches /tmp/patches
-RUN git apply /tmp/patches/dashboard-ws-protocol.patch
+RUN git apply /tmp/patches/fix-ui-ws-protocol.patch
 
 WORKDIR /blitzbrowser/dashboard
 

@@ -18,7 +18,7 @@ RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
 
 # Apply patch
 COPY patches /tmp/patches
-RUN git apply /tmp/patches/no-sandbox.patch
+RUN git apply /tmp/patches/fix-api-no-sandbox.patch
 
 WORKDIR /blitzbrowser/blitzbrowser
 
