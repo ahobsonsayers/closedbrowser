@@ -46,6 +46,7 @@ jobs:
       dockerfile: api.dockerfile
       image-name: arranhs/closedbrowser
       image-tags: ${{ needs.prepare.outputs.tags }}
+      skip-arm-build: true
 
   build-app:
     name: Build App image
@@ -56,3 +57,4 @@ jobs:
       dockerfile: app.dockerfile
       image-name: arranhs/closedbrowser-app
       image-tags: ${{ needs.prepare.outputs.tags }}
+      skip-arm-build: true
