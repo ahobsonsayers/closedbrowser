@@ -2,6 +2,7 @@ FROM node:22-alpine AS builder
 
 ARG BLITZBROWSER_COMMIT=3e86847eb3aaa153645d2632cf42905cd43fa70b
 
+# Install system dependencies
 RUN apk add --no-cache \
     ca-certificates \
     git
@@ -9,16 +10,19 @@ RUN apk add --no-cache \
 RUN corepack enable && \
     corepack prepare pnpm@9 --activate
 
-RUN git clone https://github.com/blitzbrowser/blitzbrowser.git /blitzbrowser && \
-    git -C /blitzbrowser checkout "$BLITZBROWSER_COMMIT"
+WORKDIR /blitzbrowser
 
-COPY scripts /tmp/scripts
+# Clone code
+RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
+    git checkout "$BLITZBROWSER_COMMIT"
+
+# Apply patch
 COPY patches /tmp/patches
-RUN chmod +x /tmp/scripts/*.sh && \
-    /tmp/scripts/01-patch-dashboard.sh
+RUN git apply /tmp/patches/dashboard-ws-protocol.patch
 
 WORKDIR /blitzbrowser/dashboard
 
+# Build application
 RUN rm -f pnpm-workspace.yaml
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
