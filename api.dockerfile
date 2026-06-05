@@ -67,9 +67,10 @@ RUN rm -rf /home/pptruser/node_modules && \
 
 WORKDIR /home/pptruser
 
-COPY --from=builder /blitzbrowser/blitzbrowser/package.json ./package.json
-COPY --from=builder /blitzbrowser/blitzbrowser/node_modules ./node_modules
-COPY --from=builder /blitzbrowser/blitzbrowser/dist ./dist
+COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/package.json ./package.json
+COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/node_modules ./node_modules
+COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/dist ./dist
+COPY --from=builder --chown=pptruser:pptruser /root/.cache/puppeteer /home/pptruser/.cache/puppeteer
 
 # Add scripts
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
