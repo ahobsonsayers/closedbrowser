@@ -16,9 +16,10 @@ WORKDIR /blitzbrowser
 RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
     git checkout "$BLITZBROWSER_COMMIT"
 
-# Apply patch
+# Apply patches
 COPY patches /tmp/patches
 RUN git apply /tmp/patches/fix-api-no-sandbox.patch
+RUN git apply /tmp/patches/extensions-load.patch
 
 WORKDIR /blitzbrowser/blitzbrowser
 

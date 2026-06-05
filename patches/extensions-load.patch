@@ -1,0 +1,46 @@
+--- a/blitzbrowser/src/components/browser-instance.process.ts
++++ b/blitzbrowser/src/components/browser-instance.process.ts
+@@ -1,5 +1,6 @@
+ import { ChildProcess, spawn } from 'child_process';
+ import * as fsPromise from 'fs/promises';
++import { existsSync, readdirSync } from 'fs';
+ import { exit } from 'process';
+ import puppeteer, { Browser } from 'puppeteer';
+ 
+@@ -169,6 +170,17 @@
+     async #createPuppeteerProcess() {
+         console.log('Creating puppeteer process');
+ 
++        const scanExtensions = (dir: string): string[] => {
++            if (!dir || !existsSync(dir)) return [];
++            return readdirSync(dir, { withFileTypes: true })
++                .filter((e) => e.isDirectory() && existsSync(`${dir}/${e.name}/manifest.json`))
++                .map((e) => `${dir}/${e.name}`);
++        };
++        const extensions = [
++            ...scanExtensions(process.env.GLOBAL_EXTENSIONS_DIR ?? ''),
++            ...scanExtensions(process.env.USER_EXTENSIONS_DIR ?? ''),
++        ];
++
+         this.#puppeteer_process = await puppeteer.launch({
+             headless: false,
+             executablePath: this.#browser_executable_path,
+@@ -191,14 +203,16 @@
+                 '--disable-features=TranslateUI', // Disables the translate UI
+                 '--disable-background-networking',
+                 '--disable-sync',
+-                '--disable-extensions',
+                 '--disable-signin-promo',
+                 '--disable-gpu',
+                 '--metrics-recording-only', // Record metrics, but doesn't report them
+                 '--disable-features=PersistentHistograms', // Prevents generation of BrowserMetrics files on disk
+                 `--start-maximized`,
+                 `--proxy-server=http://127.0.0.1:${this.#proxy_server_port}`,
+-                this.#disable_shm ? '--disable-dev-shm-usage' : undefined
++                this.#disable_shm ? '--disable-dev-shm-usage' : undefined,
++                ...(extensions.length ? [`--load-extension=${extensions.join(',')}`] : []),
++                ...(extensions.length ? ['--disable-logging'] : []),
++                ...(extensions.length ? ['--log-level=3'] : []),
+             ].filter(s => typeof s === 'string'),
+             env: {
+                 TZ: this.#timezone
