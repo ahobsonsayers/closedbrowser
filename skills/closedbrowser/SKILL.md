@@ -94,6 +94,43 @@ agent-browser --cdp ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY open http
 - **Never launch a local browser** — this skill only connects to an external browser via CDP
 - **Default profile**: If `CLOSEDBROWSER_DEFAULT_PROFILE` is set, use it by default (literal value, not substitution). Skip only when user explicitly says: no persistence, different profile, or no profile/session. **Only one session can use a given profile at a time** — don't run multiple agents with the same profile simultaneously.
 
+## API Endpoints (Non-CDP)
+
+These management endpoints are accessed via HTTP, not CDP. They control the browser pool rather than individual browsers.
+
+### Authentication
+
+All HTTP endpoints require the API key via header when `API_KEY` is configured:
+
+```bash
+curl -H "x-api-key: $CLOSEDBROWSER_API_KEY" http://closedbrowser-api:9999/browser-pool
+```
+
+### Key Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `GET /browser-pool` | List all active browser instances | Returns array with `id`, `wsUrl`, `isAvailable`, `isDestroyed` |
+| `POST /browser-pool` | Spawn a new browser instance | Creates a browser without connecting CDP |
+| `DELETE /browser-pool/:id` | Terminate a specific browser instance | Use instance `id` from `GET /browser-pool` |
+
+**Preferred approach:** Connect via CDP/WebSocket and let the pool auto-manage browser lifecycle. `POST /browser-pool` and `DELETE /browser-pool/:id` are management endpoints for special cases — they are **not** the normal workflow. Use CDP connection instead.
+
+### Live View URL Construction
+
+Get the instance ID from `GET /browser-pool`, then construct:
+
+```
+{DASHBOARD_URL}/browsers/{INSTANCE_ID}/live-view
+```
+
+**Example:**
+- Instance ID: `40d1c33d-3038-4b4f-8195-888f753229ba`
+- Dashboard URL: `https://browser.arranhs.com`
+- Live view: `https://browser.arranhs.com/browsers/40d1c33d-3038-4b4f-8195-888f753229ba/live-view`
+
+The dashboard URL is the base where the UI is served. The `/browsers/.../live-view` path is appended automatically.
+
 ## Query Parameters
 
 All query parameters are common to both agent-browser and browser-use. Append them to the CDP WebSocket URL after a trailing slash.
@@ -140,6 +177,65 @@ ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=abc&liveView=true
 # With proxy
 ws://localhost:9999/?proxyUrl=http://user:pass@proxy.com:1080&userDataId=123
 ```
+
+## Live View and Session Management
+
+### Starting Sessions
+
+**Default behavior:** Start browsers WITHOUT live view and WITH profile `default`.
+
+```bash
+# Default session (no live view, profile "default")
+ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=default
+```
+
+**Rules:**
+- **Profile**: Use `userDataId=default` unless the user explicitly requests a different profile or no profile.
+- **Anonymous/temp/private sessions**: If the user asks for an anonymous, temporary, or private session, **omit `userDataId`** entirely. This ensures all browser data (cookies, localStorage, etc.) is lost when the session closes.
+- **No profile warning**: If starting without `userDataId`, warn the user: "Starting without a profile — current browser state (cookies, localStorage) will be lost when the session ends."
+- **Live view**: NOT enabled by default. Only add `liveView=true` when the user explicitly requests it.
+
+### Enabling Live View (Restart Required)
+
+Live view cannot be toggled on an existing session. To enable it:
+
+1. Close the current browser session
+2. Reconnect with `liveView=true` in the URL
+
+```bash
+# Step 1: Close current session
+agent-browser --cdp ws://localhost:9999 close
+
+# Step 2: Reconnect with live view enabled
+agent-browser --cdp "ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=default&liveView=true" open https://example.com
+```
+
+### Disabling Live View (Restart Required)
+
+To continue the task without live view:
+
+1. Close the current browser session  
+2. Reconnect WITHOUT `liveView=true`
+
+```bash
+# Step 1: Close current session
+agent-browser --cdp ws://localhost:9999 close
+
+# Step 2: Reconnect without live view
+agent-browser --cdp "ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=default" open https://example.com
+```
+
+**Important**: When closing and reopening, the profile (`userDataId`) is preserved. Cookies and state from the previous session are retained.
+
+### Retrieving the Live View URL
+
+When the user asks for the live view URL:
+
+1. Call `GET /browser-pool` with the API key header
+2. Find the instance matching the current session
+3. Construct the URL: `{DASHBOARD_URL}/browsers/{INSTANCE_ID}/live-view`
+
+**If the user wants live view but it's not enabled:** Explain that the session must be closed and reopened with `liveView=true`. Ask for confirmation before doing so.
 
 ## Troubleshooting
 
