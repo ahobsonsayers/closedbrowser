@@ -18,7 +18,7 @@ RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
 
 # Apply patch
 COPY patches /tmp/patches
-RUN git apply /tmp/patches/fix-app-ws-protocol.patch
+RUN git apply /tmp/patches/app.patch
 
 WORKDIR /blitzbrowser/dashboard
 

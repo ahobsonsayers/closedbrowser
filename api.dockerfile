@@ -16,10 +16,9 @@ WORKDIR /blitzbrowser
 RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
     git checkout "$BLITZBROWSER_COMMIT"
 
-# Apply patches
+# Apply patch
 COPY patches /tmp/patches
-RUN git apply /tmp/patches/fix-api-no-sandbox.patch
-RUN git apply /tmp/patches/extensions-load.patch
+RUN git apply /tmp/patches/api.patch
 
 WORKDIR /blitzbrowser/blitzbrowser
 
@@ -39,10 +38,13 @@ USER root
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    curl \
     fluxbox \
     fonts-noto-color-emoji \
     fonts-recommended \
+    jq \
     tini \
+    unzip \
     xvfb \
     x11vnc && \
     rm -rf /var/lib/apt/lists/*
@@ -73,7 +75,12 @@ COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/node_mo
 COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/dist ./dist
 COPY --from=builder --chown=pptruser:pptruser /root/.cache/puppeteer /home/pptruser/.cache/puppeteer
 
-# Add scripts
+# Install extensions
+COPY scripts/install-extensions.sh /tmp/install-extensions.sh
+RUN /tmp/install-extensions.sh && \
+    rm -rf /tmp/*
+
+# Add entrypoint
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["tini", "--"]
