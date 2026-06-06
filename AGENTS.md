@@ -64,7 +64,7 @@ Each feature or change gets its own branch. Never combine unrelated changes.
 
 **Patches**: Target file path in patch is relative to `$APP_DIR` (browserless install dir). Rebuild after modifying.
 
-**Dockerfile**: Base image `ghcr.io/browserless/chromium:v2.47.0`, switch back from root to `blessuser` after setup, combine RUN commands with `&&`, clean apt cache.
+**Dockerfile**: Base image `ghcr.io/browserless/chromium:v2.48.3` — do NOT upgrade past v2.48.x (v2.49.0+ removed `src/browsers/index.ts`, breaking `blockads-default.patch`).
 
 ## Environment Variables (non-obvious)
 

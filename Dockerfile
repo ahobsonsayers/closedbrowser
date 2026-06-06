@@ -1,4 +1,6 @@
-FROM ghcr.io/browserless/chromium:v2.50.1
+# NOTE: Do not upgrade past v2.48.3 - later versions removed src/browsers/index.ts,
+# which breaks the blockads-default.patch. A fix is needed.
+FROM ghcr.io/browserless/chromium:v2.48.3
 
 USER root
 
