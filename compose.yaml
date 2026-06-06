@@ -1,12 +1,31 @@
 services:
-  closedbrowser:
-    container_name: closedbrowser
+  api:
+    container_name: closedbrowser-api
     image: arranhs/closedbrowser:latest
     restart: unless-stopped
     shm_size: 1g # required to prevent crashes
+    networks:
+      - closedbrowser
     ports:
-      - 3000:3000
+      - 9999:9999
     volumes:
       - ./data:/data
     environment:
+      - API_KEY=my-secret-api-key # Can be omitted for unsecured access
       - TZ=Europe/London
+
+  app:
+    container_name: closedbrowser-app
+    image: arranhs/closedbrowser-app:latest
+    restart: unless-stopped
+    networks:
+      - closedbrowser
+    ports:
+      - 3000:3000
+    environment:
+      - BLITZBROWSER_API_URL=http://localhost:9999 # Must be accessible from your browser
+      - BLITZBROWSER_API_KEY=my-secret-api-key # Can be omitted if also ommitted on api
+      - HTTPS_DISABLED=true
+
+networks:
+  closedbrowser:

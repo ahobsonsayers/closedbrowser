@@ -1,276 +1,139 @@
 ---
 name: closedbrowser
-description: Browser automation using closedbrowser (containerized Chromium via CDP). Use when the user needs to automate browser tasks with a remote CDP endpoint, especially when CLOSEDBROWSER_URL is configured. Always use this skill when the user mentions closedbrowser, remote browser automation, CDP WebSocket connections, or browser automation with CLOSEDBROWSER_URL environment variable.
+description: Use when automating browser tasks via remote CDP endpoint or WebSocket, especially with CLOSEDBROWSER_API_URL configured. Also triggers on live view, live share, closedbrowser, containerized Chromium, or remote browser automation.
 allowed-tools: Bash(agent-browser:*), Bash(browser-use:*), Bash(echo:*), Bash(printenv:*), Bash(which:*)
 required_environment_variables:
-  - name: CLOSEDBROWSER_URL
-    prompt: ClosedBrowser WebSocket URL
-    help: WebSocket URL for connecting to ClosedBrowser (e.g., ws://localhost:3000)
-  - name: CLOSEDBROWSER_TOKEN
-    prompt: ClosedBrowser Auth Token
-    help: Token for authenticating to ClosedBrowser
+  - name: CLOSEDBROWSER_API_URL
+    prompt: CDP WebSocket URL with scheme (e.g., ws://localhost:9999)
+    help: The main CDP endpoint. Must be set or the agent cannot connect.
+  - name: CLOSEDBROWSER_API_KEY
+    prompt: API key (if the container requires auth)
+    help: Optional. Only needed if the container was started with API_KEY set.
+  - name: CLOSEDBROWSER_DASHBOARD_URL
+    prompt: Dashboard base URL (e.g., https://browser.example.com)
+    help: Required for live view / live share. If unset and the user requests a live view URL, ask the user: "What is the URL of the dashboard?"
+  - name: CLOSEDBROWSER_DEFAULT_PROFILE
+    prompt: Default profile name (e.g., my-profile)
+    help: Unset by default. Set this to persist cookies/login across sessions. All data is lost on close if this is not set and no userDataId is provided.
 ---
 
 # closedbrowser automation
 
-Browser automation via CLI connecting to an external browser over CDP WebSocket. Supports two backends: **agent-browser** and **browser-use**.
+Connect to remote Chromium via CDP WebSocket. Supports **agent-browser** and **browser-use** backends.
 
-## Step 1: Check Environment and Tools
+## Environment Variables
 
-Run this single check before doing anything else:
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `CLOSEDBROWSER_API_URL` | Yes | CDP WebSocket URL (e.g., `ws://localhost:9999`) |
+| `CLOSEDBROWSER_API_KEY` | No | API key (only if container requires auth) |
+| `CLOSEDBROWSER_DASHBOARD_URL` | No | Dashboard base URL — **required for live view** |
+| `CLOSEDBROWSER_DEFAULT_PROFILE` | No | **Unset by default**. Set to persist cookies/login across sessions. |
 
-```bash
-printenv | grep ^CLOSEDBROWSER_ && echo "agent-browser: $(which agent-browser 2>/dev/null || echo NOT_FOUND)" && echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
-```
+**Security:**
+- API URL → use **literal value** in commands
+- API key → use **`$CLOSEDBROWSER_API_KEY`** substitution (never show in tool output)
 
-If any `CLOSEDBROWSER_*` vars appear in output, they are **not set**.
-
-**If CLOSEDBROWSER_URL is not set, stop and ask the user to set it.** Nothing else matters without it.
-
-**CLOSEDBROWSER_TOKEN is optional** — only required if the container was started with a `TOKEN` environment variable.
-
-**Normalize the URL if needed:**
-- Has a port (e.g., `localhost:3000`) → `ws://` (local, no SSL)
-- No port (e.g., `browser.example.com`) → `wss://` (remote, SSL)
-- On connection failure, try the other protocol
-- If `CLOSEDBROWSER_TOKEN` is set, append as query param after trailing slash: `/?token=$CLOSEDBROWSER_TOKEN` (use substitution, never literal)
-
-Then select a tool:
-
-| Result | Action |
-|--------|--------|
-| Only agent-browser found | Read `agent-browser.md` in this skill directory. |
-| Only browser-use found | Read `browser-use.md` in this skill directory. |
-| Both found | Ask the user which they prefer. Wait for answer, then read the corresponding file. |
-| Neither found | Tell the user they need one of the tools below, then **stop and wait**. Never install for the user. |
-
-**Installation instructions (provide to user, never run yourself):**
-- agent-browser: `brew install agent-browser` — see https://agent-browser.dev/installation
-- browser-use: `curl -fsSL https://browser-use.com/cli/install.sh | bash` — see https://docs.browser-use.com/open-source/browser-use-cli
-
-## CRITICAL SECURITY RULE: Variable Substitution
-
-**This is non-negotiable. Violating this exposes secrets in tool call logs.**
-
-### URL: Use LITERAL Value (NO substitution)
-
-Read `CLOSEDBROWSER_URL` once at startup, then use the **actual resolved value** in all commands:
+## Step 1: Check Environment and Select Tool
 
 ```bash
-# WRONG - variable expansion visible in tool output
-agent-browser --cdp "$CLOSEDBROWSER_URL" open https://example.com
-
-# CORRECT - resolve once, use literal value
-agent-browser --cdp ws://localhost:3000 open https://example.com
+printenv CLOSEDBROWSER_API_URL && echo "OK" || echo "MISSING"
+echo "agent-browser: $(which agent-browser 2>/dev/null || echo NOT_FOUND)"
+echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
 ```
 
-### Token: MUST Use $VAR Substitution (REQUIRED)
+**If `CLOSEDBROWSER_API_URL` is MISSING: stop and ask the user to set it.**
 
-**The token must NEVER appear in tool call output.** Always use shell substitution:
+**Normalize URL:** has port → `ws://`; no port → `wss://`. On failure try the other.
 
-```bash
-# WRONG - token exposed in tool output (SECURITY VIOLATION)
-agent-browser --cdp ws://localhost:3000/?token=abc123secret open https://example.com
+**Select tool:**
 
-# WRONG - do not read token into a variable and use it literally
-TOKEN_VALUE=$(printenv CLOSEDBROWSER_TOKEN)
-agent-browser --cdp ws://localhost:3000/?token=$TOKEN_VALUE open https://example.com
+| Found | Action |
+|-------|--------|
+| Only agent-browser | Read `agent-browser.md` |
+| Only browser-use | Read `browser-use.md` |
+| Both | Ask user which they prefer |
+| Neither | Give install instructions, **stop and wait** |
 
-# CORRECT - use $CLOSEDBROWSER_TOKEN substitution
-agent-browser --cdp ws://localhost:3000/?token=$CLOSEDBROWSER_TOKEN open https://example.com
-```
+**Install instructions (provide, never run):**
+- agent-browser: `brew install agent-browser` — https://agent-browser.dev/installation
+- browser-use: `curl -fsSL https://browser-use.com/cli/install.sh | bash` — https://docs.browser-use.com/open-source/browser-use-cli
 
-**Why this matters:** Tool call logs are persisted. Exposed tokens = security breach.
+## Rules
 
-### Quick Reference
-
-| Variable | Use In Commands | Why |
-|----------|-----------------|-----|
-| `CLOSEDBROWSER_URL` | Literal value (resolve once) | Not secret, but cleaner logs |
-| `CLOSEDBROWSER_TOKEN` | `$CLOSEDBROWSER_TOKEN` | NEVER exposed in output |
-
-## Shared Rules
-
-- **Never install tools for the user** — only provide instructions
-- **Never launch a local browser** — this skill only connects to an external browser via CDP
-- **Default profile**: If `CLOSEDBROWSER_DEFAULT_PROFILE` is set, use it by default (literal value, not substitution). Skip only when user explicitly says: no persistence, different profile, or no profile/session. **Only one session can use a given profile at a time** — don't run multiple agents with the same profile simultaneously.
+- **Never install tools for the user**
+- **Never launch a local browser** — only external CDP
+- **Default profile:** Use `CLOSEDBROWSER_DEFAULT_PROFILE` if set. Do NOT set `userDataId` manually. Override only if user explicitly says: no persistence, different profile, or no profile.
+- **No profile:** If user requests anonymous/temp/private OR `CLOSEDBROWSER_DEFAULT_PROFILE` is not set AND user says "no profile", **omit `userDataId` entirely**. Warn: "All browser state will be lost on close. Set CLOSEDBROWSER_DEFAULT_PROFILE for persistence."
 
 ## Query Parameters
 
-Reference: [Browserless Launch Options](https://docs.browserless.io/baas/launch-options)
+**Always use trailing slash before params:** `ws://host:port/?...` (not `ws://host:port?...`)
 
-All query parameters are common to both agent-browser and browser-use. Append them to the CDP WebSocket URL after a trailing slash.
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `apiKey` | Only if `API_KEY` set | Authentication |
+| `userDataId` | Optional | Session profile. Uses `CLOSEDBROWSER_DEFAULT_PROFILE` by default. |
+| `liveView` | Optional | Enable real-time interaction |
+| `headless` | Optional | `true`/`false` — for anti-bot |
+| `stealth` | Optional | `true`/`false` — for anti-bot |
+| `proxyUrl` | Optional | `http://user:pass@host:port` |
 
-**Critical: Always use a trailing slash before query params** — without it the server returns 400.
+**User data pattern:** `/^[a-zA-Z0-9-_]{1,64}$/`
 
-```
-# Correct
-ws://localhost:3000/?headless=false&stealth=true
-
-# WRONG — missing slash, will 400
-ws://localhost:3000?headless=false&stealth=true
-```
-
-### Supported Parameters
-
-| Parameter | Description | Docs |
-|-----------|-------------|------|
-| `token` | Authorization token | ✅ |
-| `timeout` | Session timeout in ms (default 60000) | ✅ |
-| `blockAds` | Enable ad blocker (uBlock Origin) | ✅ |
-| `headless` | Run headless (`true`/`false`) — use `false` for bot protection | ✅ |
-| `stealth` | Enable stealth mode | ✅ |
-| `slowMo` | Delay between actions (ms) | ✅ |
-| `ignoreDefaultArgs` | Ignore default browser args | ✅ |
-| `acceptInsecureCerts` | Accept invalid SSL certs | ✅ |
-| `launch` | JSON launch options (URL/base64 encoded) | ✅ |
-
-### Chrome Flags (via `--` prefix)
-
-Any Chrome flag can be passed with `--` prefix:
-
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `--proxy-server` | Proxy server (host:port) | `?--proxy-server=proxy.com:8080` |
-| `--window-size` | Browser window size | `?--window-size=1920,1080` |
-| `--lang` | Browser language | `?--lang=en-US` |
-
-### Not Yet Supported
-
-These are in the docs but not implemented in this container:
-- `proxy`, `proxyCountry`, `proxyCity`, `proxySticky`, `proxyLocaleMatch`, `proxyPreset` — residential proxy features
-- `externalProxyServer` — custom proxy URL
-- `record`, `replay` — session recording
-- `profile` — authenticated profiles
-- `humanlike` — human behavior simulation
-- `blockConsentModals` — cookie consent blocking
-
-### Combining Parameters
-
-Parameters combine in order. Later params override earlier ones:
-
-```
-ws://localhost:3000/?headless=false&stealth=true&blockAds=true&timeout=120000
-```
-
-### The `launch` Parameter
-
-For complex configurations, use the `launch` parameter with a JSON object. Encode with URL encoding or base64:
+### Examples
 
 ```bash
-# URL encoded
-?launch=%7B%22headless%22%3Afalse%2C%22stealth%22%3Atrue%2C%22args%22%3A%5B%22--window-size%3D1920%2C1080%22%5D%7D
+# Uses default profile if CLOSEDBROWSER_DEFAULT_PROFILE is set
+ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY
 
-# base64 (simpler)
-?launch=eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdCI6dHJ1ZSwiYXJncyI6WyItLXdpbmRvdy1zaXplPTE5MjAsMTA4MCJdfQ==
+# With live view
+ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true
+
+# Anti-bot (headful + stealth)
+ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&headless=false&stealth=true
 ```
 
-JSON options: `headless`, `stealth`, `slowMo`, `ignoreDefaultArgs`, `acceptInsecureCerts`, `args` (Chrome flags array).
+## Live View
 
-For full details, see [Browserless Launch Options](https://docs.browserless.io/baas/launch-options).
+Live view **cannot be toggled** on an existing session. Close and reconnect:
 
-## The `launch` Object
+```bash
+# Enable
+agent-browser --cdp ws://localhost:9999 close
+agent-browser --cdp "ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true" open https://example.com
 
-The `launch` object is a JSON string passed as a single query parameter. Use it for browser-level options like `headless`, `stealth`, or array flags like `args: [...]`.
-
-### Launch Parameters
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `args` | Array of Chrome command-line flags (see Chrome Flags section) | `[]` |
-| `headless` | Run browser headless. Set `false` for headful mode (helps bypass bot detection) | `true` |
-| `stealth` | Enable stealth mode to reduce automation signals | `false` |
-| `slowMo` | Delay between actions in milliseconds | `0` |
-| `ignoreDefaultArgs` | Ignore default browser args (boolean or array) | `false` |
-| `acceptInsecureCerts` | Accept invalid SSL certificates | `false` |
-
-### Encoding the `launch` Value
-
-**URL encoding:**
-```
-?launch=%7B%22headless%22%3Afalse%2C%22stealth%22%3Atrue%2C%22args%22%3A%5B%22--window-size%3D1920%2C1080%22%5D%7D
+# Disable
+agent-browser --cdp ws://localhost:9999 close
+agent-browser --cdp "ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE" open https://example.com
 ```
 
-**Base64 (simpler):**
-```
-?launch=eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdCI6dHJ1ZSwiYXJncyI6WyItLXdpbmRvdy1zaXplPTE5MjAsMTA4MCJdfQ==
-```
+### Retrieving Live View URL
 
-Decoded: `{"headless":false,"stealth":true,"args":["--window-size=1920,1080"]}`
+**Template:** `{DASHBOARD_URL}/browsers/{INSTANCE_ID}/live-view`
 
-## Chrome Flags
+If `CLOSEDBROWSER_DASHBOARD_URL` is not set and user requests live view:
+1. **Ask the user:** "What is the URL of the dashboard?"
+2. Use their answer to construct the URL
 
-Chrome flags are passed via the `args` array inside the `launch` object.
+**Example:**
+- Dashboard: `https://browser.arranhs.com`
+- Instance: `40d1c33d-3038-4b4f-8195-888f753229ba`
+- Live view: `https://browser.arranhs.com/browsers/40d1c33d-3038-4b4f-8195-888f753229ba/live-view`
 
-### Available Flags
+The `/browsers/{id}/live-view` path is appended automatically.
 
-| Flag | Description | Example |
-|------|-------------|---------|
-| `--window-size` | Browser window size | `"--window-size=1920,1080"` |
-| `--lang` | Browser language | `"--lang=en-US"` |
-| `--user-data-dir` | Profile directory for persistence | `"--user-data-dir=/data/profiles/my-session"` |
-| `--proxy-server` | Proxy server (host:port) | `"--proxy-server=proxy.com:8080"` |
-
-See [Chrome Command-Line Switches](https://peter.sh/experiments/chromium-command-line-switches/) for others.
-
-### Example: Multiple Flags
-
-```json
-{"headless":false,"stealth":true,"args":["--window-size=1920,1080","--lang=en-US"]}
-```
-
-**Base64:** `eyJoZWFkbGVzcyI6ZmFsc2UsInN0ZWFsdGgiOnRydWUsImFyZ3MiOlsiLS13aW5kb3ctc2l6ZT0xOTIwLDEwODAiLCItLWxhbmc9ZW4tVVMiXX0K`
-
-For full details, see [Browserless Launch Options](https://docs.browserless.io/baas/launch-options).
-
-## Persistent Profiles (user-data-dir)
-
-Use the `--user-data-dir` Chrome flag to persist browser data (cookies, localStorage, etc.) across sessions. The container mounts profiles at `/data/profiles/<name>`.
-
-### Profile Directory Structure
-
-```
-/data/profiles/
-  my-session/      # Chrome profile directory
-  another-profile/ # Another profile
-```
-
-### Usage
-
-```json
-{"args":["--user-data-dir=/data/profiles/my-session"]}
-```
-
-**Base64:** `eyJhcmdzIjpbIi0tdXNlci1kYXRhLWRpcj0vZGF0YS9wcm9maWxlcy9teS1zZXNzaW9uIl19`
-
-Decoded: `{"args":["--user-data-dir=/data/profiles/my-session"]}`
-
-### Default Behavior (No Persistence)
-
-By default, closedbrowser automatically creates a temporary user-data-dir and disposes of it after disconnect — there is **no persistence**. Use `--user-data-dir` only when you need data to persist across sessions.
-
-### Notes
-
-- **Always use this when the user mentions a named session or profile**, or if they want persistence — ask them what to call it
-- Use different profile names for different users/sessions to avoid state pollution
-
-## Anti-Bot Protection (Headful + Stealth)
-
-**When in doubt, use headful + stealth — it does no harm on unprotected sites.**
-
-For any site with bot detection (Cloudflare, DataDome, Akamai, CAPTCHAs, or unexpected blocks), add `headless=false&stealth=true` to your URL.
-
-Always use both flags together — never just one.
-
-See **Query Parameters** section above for the full list of available options.
+**Pool management:** `GET /browser-pool` (list active instances). Use `id` from response.
 
 ## Troubleshooting
 
 | Error | Action |
 |-------|--------|
-| Connection refused | Check URL, protocol (`ws://` vs `wss://`), and that the container is running. Try the other protocol. |
-| 400 Bad Request with query params | Missing trailing slash — use `ws://host:port/?...`, not `ws://host:port?...`. |
-| Site blocked / CAPTCHA | Close and reconnect with `headless=false&stealth=true` on the CDP URL. |
-| CDP connection dropped / session expired | Remote browser closed due to inactivity or session timeout. Add `timeout` query param to extend lifetime. See Query Parameters section. |
+| Connection refused | Check URL, protocol (`ws://` vs `wss://`), container running. Try other protocol. |
+| 400 Bad Request | Missing trailing slash. Use `ws://host:port/?...` |
+| 401 Unauthorized | Missing or invalid apiKey |
+| "Session already running with different config" | Use different `userDataId` or close existing session |
+| CDP connection dropped | Remote browser closed due to inactivity. Check container logs. |
+| Live view not working | Ensure `liveView=true` in URL params |
 
-See the tool-specific reference file for additional troubleshooting.
+See agent-browser.md or browser-use.md for tool-specific reference.
