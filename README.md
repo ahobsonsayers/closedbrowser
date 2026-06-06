@@ -20,9 +20,10 @@ See the skill at `skills/closedbrowser` for more details on setup.
 
 | Variable                      | Required | Description                                                            |
 | ----------------------------- | -------- | ---------------------------------------------------------------------- |
-| `CLOSEDBROWSER_URL`           | Yes      | CDP endpoint URL (e.g., `localhost:9999` or `browser.example.com`)     |
-| `CLOSEDBROWSER_TOKEN`         | No       | Token for authenticated containers (only if container has `TOKEN` set) |
-| `CLOSEDBROWSER_DEFAULT_PROFILE` | No     | Default profile for persistence (e.g., `my-profile`). Only one session can use a given profile at a time. |
+| `CLOSEDBROWSER_API_URL`       | Yes      | CDP endpoint URL (e.g., `localhost:9999` or `browser.example.com`)     |
+| `CLOSEDBROWSER_API_KEY`       | No       | API key for authenticated containers (only if container has `API_KEY` set) |
+| `CLOSEDBROWSER_DASHBOARD_URL` | No       | Base URL of the dashboard (e.g., `https://browser.example.com`) — required for live view   |
+| `CLOSEDBROWSER_DEFAULT_PROFILE` | No       | Default profile for persistence (e.g., `my-profile`). **Unset by default** — all browser data (cookies, login state, etc.) is lost on exit. **Recommended to set this** so every session starts with the same profile unless the user explicitly requests otherwise. Only one session can use a given profile at a time. |
 
 ### CDP URL
 
@@ -33,10 +34,10 @@ ws://localhost:9999/
 wss://browser.example.com/
 ```
 
-If `CLOSEDBROWSER_TOKEN` is set, it's appended as a query param:
+If `CLOSEDBROWSER_API_KEY` is set, it's appended as a query param:
 
 ```
-ws://localhost:9999/?token=YOUR_TOKEN
+ws://localhost:9999/?apiKey=YOUR_API_KEY
 ```
 
 For sites with bot detection (Cloudflare, DataDome, etc.), the skill can add `headless=false&stealth=true` to enable headful mode with stealth flags:

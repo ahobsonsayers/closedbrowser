@@ -7,6 +7,8 @@
 
 ## Connect
 
+**Always read SKILL.md first for environment setup.** The main skill handles `CLOSEDBROWSER_API_URL`, `CLOSEDBROWSER_API_KEY`, and `CLOSEDBROWSER_DEFAULT_PROFILE` setup.
+
 browser-use does NOT persist connections — pass `--cdp-url` on every command:
 
 ```bash

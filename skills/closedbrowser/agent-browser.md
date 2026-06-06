@@ -9,12 +9,25 @@
 
 ## Connect
 
-Pass `--cdp` with the full WebSocket URL on every command:
+**Always read SKILL.md first for environment setup.** The main skill handles `CLOSEDBROWSER_API_URL`, `CLOSEDBROWSER_API_KEY`, and `CLOSEDBROWSER_DEFAULT_PROFILE` setup.
+
+Pass `--cdp` with the full WebSocket URL **on every command**:
 
 ```bash
 agent-browser --cdp ws://localhost:9999 open https://example.com
 agent-browser --cdp ws://localhost:9999 snapshot -i
 agent-browser --cdp ws://localhost:9999 click @e1
+```
+
+**URL resolution pattern for commands:**
+```bash
+# 1. Resolve the base URL literal from CLOSEDBROWSER_API_URL once
+# 2. Append apiKey if CLOSEDBROWSER_API_KEY is set
+# 3. Append userDataId if CLOSEDBROWSER_DEFAULT_PROFILE is set and user does NOT want anonymous
+# 4. Append other params if requested
+
+# Full URL pattern:
+agent-browser --cdp "{LITERAL_API_URL}/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE" open https://example.com
 ```
 
 `--cdp` accepts a port number or full URL:
