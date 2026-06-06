@@ -1,6 +1,6 @@
 # closedbrowser
 
-A containerised Chromium browser built on [BlitzBrowser](https://github.com/blitzbrowser/blitzbrowser), with uBlock Origin and I Still Don't Care About Cookies pre-installed.
+A containerised Chromium browser built on [BlitzBrowser](https://github.com/blitzbrowser/blitzbrowser), with I Still Don't Care About Cookies and NopeCHA pre-installed.
 
 ## Usage
 
@@ -18,20 +18,20 @@ See the skill at `skills/closedbrowser` for more details on setup.
 
 ### Skill config (environment variables)
 
-| Variable                      | Required | Description                                                            |
-| ----------------------------- | -------- | ---------------------------------------------------------------------- |
-| `CLOSEDBROWSER_API_URL`       | Yes      | CDP endpoint URL (e.g., `localhost:9999` or `browser.example.com`)     |
-| `CLOSEDBROWSER_API_KEY`       | No       | API key for authenticated containers (only if container has `API_KEY` set) |
-| `CLOSEDBROWSER_DASHBOARD_URL` | No       | Base URL of the dashboard (e.g., `https://browser.example.com`) — required for live view   |
-| `CLOSEDBROWSER_DEFAULT_PROFILE` | No       | Default profile for persistence (e.g., `my-profile`). **Unset by default** — all browser data (cookies, login state, etc.) is lost on exit. **Recommended to set this** so every session starts with the same profile unless the user explicitly requests otherwise. Only one session can use a given profile at a time. |
+| Variable                          | Required | Description                                                            |
+| --------------------------------- | -------- | ---------------------------------------------------------------------- |
+| `CLOSEDBROWSER_API_URL`           | Yes      | CDP WebSocket URL (e.g., `ws://localhost:9999` or `wss://browser.example.com`) |
+| `CLOSEDBROWSER_API_KEY`           | No       | API key for authenticated containers (only if container has `API_KEY` set) |
+| `CLOSEDBROWSER_DASHBOARD_URL`    | No       | Dashboard URL for live view (e.g., `https://browser.example.com`)      |
+| `CLOSEDBROWSER_DEFAULT_PROFILE`  | No       | Default profile for persistence (e.g., `my-profile`). Only one session can use a given profile at a time. |
 
 ### CDP URL
 
 The skill constructs a CDP URL to connect to the browser. The base format is:
 
 ```
-ws://localhost:9999/
-wss://browser.example.com/
+ws://localhost:9999
+wss://browser.example.com
 ```
 
 If `CLOSEDBROWSER_API_KEY` is set, it's appended as a query param:
@@ -40,10 +40,22 @@ If `CLOSEDBROWSER_API_KEY` is set, it's appended as a query param:
 ws://localhost:9999/?apiKey=YOUR_API_KEY
 ```
 
-For sites with bot detection (Cloudflare, DataDome, etc.), the skill can add `headless=false&stealth=true` to enable headful mode with stealth flags:
+For persistence, use `userDataId`:
 
 ```
-ws://localhost:9999/?headless=false&stealth=true
+ws://localhost:9999/?apiKey=YOUR_API_KEY&userDataId=my-profile
+```
+
+For sites with bot detection (Cloudflare, DataDome, etc.), add `headless=false&stealth=true`:
+
+```
+ws://localhost:9999/?apiKey=YOUR_API_KEY&headless=false&stealth=true
+```
+
+For live view, add `liveView=true`:
+
+```
+ws://localhost:9999/?apiKey=YOUR_API_KEY&userDataId=my-profile&liveView=true
 ```
 
 ## Running
@@ -54,13 +66,14 @@ docker compose up -d
 
 ## Ports
 
-| Port   | Description     |
-| ------ | --------------- |
-| `9999` | BlitzBrowser API |
+| Port   | Description              |
+| ------ | ------------------------ |
+| `9999` | BlitzBrowser CDP/API     |
+| `3000` | Dashboard (app service)  |
 
 ## Volumes
 
-Mount a single `data` directory to persist all browser data:
+Mount a single `data` directory to persist browser data:
 
 ```yaml
 volumes:
@@ -82,119 +95,99 @@ docker compose up -d
 
 ### Extensions
 
-[uBlock Origin Lite](https://github.com/uBlockOrigin/uBOL-home), [I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies), and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
+[I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies) and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
 
 To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `data/extensions/` and restart the container. Requires the `data` mount above.
 
 ## Environment variables
 
-ClosedBrowser has environment variables that are both unique/specific to this image and inherited from the base BlitzBrowser image.
+To enable authentication, set `API_KEY` on the API service and `AUTH_KEY` on the dashboard. You can securely generate a key with:
 
-### ClosedBrowser environment variables
+```bash
+openssl rand -hex 32
+```
+
+### API service (closedbrowser-api)
 
 | Variable                    | Default | Description                                                |
 | --------------------------- | ------- | ---------------------------------------------------------- |
-| `EXTENSION_UBLOCK_ENABLED`  | `true`  | Enable uBlock Origin Lite by default (`true`/`false`)      |
+| `API_KEY`                   | —       | Require authentication on all endpoints                    |
+| `MAX_BROWSER_INSTANCES`    | `99`    | Max concurrent browser sessions                            |
+| `DISABLE_SHM`               | —       | Disable shared memory (set if you can't configure `shm_size`) |
 | `EXTENSION_NOPECHA_API_KEY` | —       | NopeCHA extension API key (optional, 100 free credits/24h) |
+| `TZ`                        | `UTC`   | Timezone (e.g., `Europe/London`)                           |
 
-### BlitzBrowser environment variables
+### Dashboard service (closedbrowser-app)
 
-The standard BlitzBrowser configuration environment variables can be seen in the [BlitzBrowser documentation](https://docs.blitzbrowser.com).
+| Variable                | Default                  | Description                                                  |
+| ----------------------- | ------------------------ | ------------------------------------------------------------ |
+| `BLITZBROWSER_API_URL`  | `http://localhost:9999`  | BlitzBrowser API URL (must be accessible from your browser)  |
+| `BLITZBROWSER_API_KEY`  | —                        | API key if BlitzBrowser requires auth                        |
+| `AUTH_KEY`              | —                        | Dashboard login key (separate from `API_KEY`)                |
+| `HTTPS_DISABLED`        | —                        | Set to `true` to allow HTTP connections to the dashboard     |
 
-### Server
+## CDP Query Parameters
 
-| Variable | Default     | Description     |
-| -------- | ----------- | --------------- |
-| `HOST`   | `localhost` | Listen address  |
-| `PORT`   | `9999`      | Listen port     |
+Append query params to the WebSocket URL after a trailing slash:
 
-### Security
+```
+ws://localhost:9999?headless=false&stealth=true&userDataId=my-profile
+```
 
-| Variable              | Default | Description                             |
-| --------------------- | ------- | --------------------------------------- |
-| `TOKEN`               | —       | Require authentication on all endpoints |
-| `ALLOW_FILE_PROTOCOL` | `false` | Allow `file://` URLs in browser         |
+### Supported Parameters
 
-### Sessions
+| Parameter          | Description                                                       | Example                          |
+| ------------------ | ----------------------------------------------------------------- | -------------------------------- |
+| `apiKey`           | Authentication token                                              | `?apiKey=YOUR_API_KEY`           |
+| `userDataId`       | Persist session data (matches `/^[a-zA-Z0-9-_]{1,64}$/`)        | `?userDataId=my-profile`         |
+| `userDataReadOnly` | Load profile without saving changes (`true`/`false`)             | `?userDataReadOnly=true`         |
+| `liveView`         | Enable live view in dashboard                                     | `?liveView=true`                  |
+| `headless`         | Run headless (`true`/`false`) — use `false` for bot protection   | `?headless=false`                 |
+| `stealth`          | Enable stealth mode                                               | `?stealth=true`                  |
+| `proxyUrl`         | HTTP proxy URL (`http://user:pass@host:port`)                    | `?proxyUrl=http://...`           |
+| `timezone`         | Override browser timezone                                         | `?timezone=Europe/London`        |
+| `browserVersion`   | Chrome version (`default`, `latest`, or specific version)        | `?browserVersion=latest`         |
 
-| Variable             | Default    | Description                              |
-| -------------------- | ---------- | ---------------------------------------- |
-| `CONCURRENT`         | `10`       | Max concurrent browser sessions          |
-| `QUEUED`             | `10`       | Max queued requests before `429` reject  |
-| `TIMEOUT`            | `30000`    | Session timeout ms (`-1` for no timeout) |
-| `RETRIES`            | `5`        | Connection retry attempts                |
-| `MAX_PAYLOAD_SIZE`   | `10485760` | Max request size in bytes (default 10MB) |
-| `MAX_CPU_PERCENT`    | `99`       | CPU usage limit percentage               |
-| `MAX_MEMORY_PERCENT` | `99`       | Memory usage limit percentage            |
+## Volumes (internal)
 
-### Alerts
+BlitzBrowser stores internal data in the `/blitzbrowser` folder:
 
-| Variable            | Default | Description                           |
-| ------------------- | ------- | ------------------------------------- |
-| `HEALTH`            | `false` | Enable pre-request health checks      |
-| `FAILED_HEALTH_URL` | —       | POST webhook when health check fails  |
-| `QUEUE_ALERT_URL`   | —       | POST webhook when queue is non-empty  |
-| `REJECT_ALERT_URL`  | —       | POST webhook when request is rejected |
-| `TIMEOUT_ALERT_URL` | —       | POST webhook on session timeout       |
-| `ERROR_ALERT_URL`   | —       | POST webhook on errors                |
+- User data folder: `/blitzbrowser/user-data`
+- Browser binaries: `/blitzbrowser/browsers`
 
-### CORS
+## Docker Compose
 
-| Variable                 | Default              | Description                             |
-| ------------------------ | -------------------- | --------------------------------------- |
-| `ALLOW_CORS`             | `false`              | Enable CORS support                     |
-| `CORS_ALLOW_CREDENTIALS` | `true`               | Allow credentials in CORS header        |
-| `CORS_ALLOW_HEADERS`     | `*`                  | Headers to allow in CORS requests       |
-| `CORS_ALLOW_METHODS`     | `OPTIONS, POST, GET` | Methods to allow in CORS requests       |
-| `CORS_ALLOW_ORIGIN`      | `*`                  | Origin pattern to match against         |
-| `CORS_EXPOSE_HEADERS`    | `*`                  | Headers to expose in CORS responses     |
-| `CORS_MAX_AGE`           | `2592000`            | CORS preflight cache duration (seconds) |
+```yaml
+services:
+  api:
+    container_name: closedbrowser-api
+    image: arranhs/closedbrowser:latest
+    restart: unless-stopped
+    shm_size: 2g
+    networks:
+      - closedbrowser
+    ports:
+      - 9999:9999
+    volumes:
+      - ./data:/data
+    environment:
+      - API_KEY=my-secret-api-key
+      - TZ=Europe/London
 
-### Browser APIs
+  app: # optional — dashboard for live view
+    container_name: closedbrowser-app
+    image: arranhs/closedbrowser-app:latest
+    restart: unless-stopped
+    networks:
+      - closedbrowser
+    ports:
+      - 3000:3000
+    environment:
+      - BLITZBROWSER_API_URL=http://localhost:9999
+      - BLITZBROWSER_API_KEY=my-secret-api-key
+      - HTTPS_DISABLED=true
 
-| Variable    | Default | Description                                            |
-| ----------- | ------- | ------------------------------------------------------ |
-| `ALLOW_GET` | `false` | Allow GET-style calls on browser APIs via `?body=JSON` |
-
-### Directories
-
-| Variable            | Default        | Description                        |
-| ------------------- | -------------- | ---------------------------------- |
-| `METRICS_JSON_PATH` | `tmpdir`       | Path to write metrics JSON file    |
-| `ROUTES`            | `build/routes` | Custom API routes directory        |
-| `STATIC`            | `static`       | Static file directory for debugger |
-
-### Reverse Proxy
-
-| Variable   | Default | Description                                             |
-| ---------- | ------- | ------------------------------------------------------- |
-| `EXTERNAL` | —       | External URL for reverse proxy (sets `wss://` protocol) |
-
-### Debugger
-
-| Variable          | Default | Description                       |
-| ----------------- | ------- | --------------------------------- |
-| `ENABLE_DEBUGGER` | `true`  | Enable built-in debugger endpoint |
-
-### Metrics
-
-| Variable               | Default | Description                                          |
-| ---------------------- | ------- | ---------------------------------------------------- |
-| `MACHINE_STATS_SOURCE` | `auto`  | CPU/memory stats source: `auto`, `host`, or `cgroup` |
-
-### Localization
-
-| Variable | Default | Description                     |
-| -------- | ------- | ------------------------------- |
-| `TZ`     | `UTC`   | Timezone (e.g. `Europe/London`) |
-
-## Routes
-
-Useful endpoints to be aware of. See the [BlitzBrowser documentation](https://docs.blitzbrowser.com) for full API details.
-
-| Route                  | Description                                |
-| ---------------------- | ------------------------------------------ |
-| `/`                    | Chromium browser WebSocket (Puppeteer/CDP) |
-| `/browser-instances`   | Browser instance events WebSocket            |
-
+networks:
+  closedbrowser:
+```
 

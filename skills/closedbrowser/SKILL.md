@@ -68,7 +68,7 @@ echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
 
 ## Query Parameters
 
-**Always use trailing slash before params:** `ws://host:port/?...` (not `ws://host:port?...`)
+Query params go directly after the host: `ws://host:port?...`
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
@@ -85,13 +85,13 @@ echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
 
 ```bash
 # Uses default profile if CLOSEDBROWSER_DEFAULT_PROFILE is set
-ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY
+ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY
 
 # With live view
-ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true
+ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true
 
 # Anti-bot (headful + stealth)
-ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&headless=false&stealth=true
+ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&headless=false&stealth=true
 ```
 
 ## Live View
@@ -101,11 +101,11 @@ Live view **cannot be toggled** on an existing session. Close and reconnect:
 ```bash
 # Enable
 agent-browser --cdp ws://localhost:9999 close
-agent-browser --cdp "ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true" open https://example.com
+agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true" open https://example.com
 
 # Disable
 agent-browser --cdp ws://localhost:9999 close
-agent-browser --cdp "ws://localhost:9999/?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE" open https://example.com
+agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE" open https://example.com
 ```
 
 ### Retrieving Live View URL
@@ -130,7 +130,7 @@ The `/browsers/{id}/live-view` path is appended automatically.
 | Error | Action |
 |-------|--------|
 | Connection refused | Check URL, protocol (`ws://` vs `wss://`), container running. Try other protocol. |
-| 400 Bad Request | Missing trailing slash. Use `ws://host:port/?...` |
+| 400 Bad Request | Check URL format and query params |
 | 401 Unauthorized | Missing or invalid apiKey |
 | "Session already running with different config" | Use different `userDataId` or close existing session |
 | CDP connection dropped | Remote browser closed due to inactivity. Check container logs. |
