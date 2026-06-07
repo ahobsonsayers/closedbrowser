@@ -74,8 +74,8 @@ volumes:
 
 | Directory                    | Description                                          |
 | ---------------------------- | ---------------------------------------------------- |
-| `/blitzbrowser/extensions/` | Custom extensions (must contain `manifest.json`)    |
 | `/blitzbrowser/user-data`   | Browser profiles (cookies, local storage)            |
+| `/blitzbrowser/extensions/` | Custom extensions (must contain `manifest.json`)    |
 | `/blitzbrowser/browsers`   | Downloaded browser binaries                          |
 
 **Note:** Create the directories on the host before running to prevent permission issues:

@@ -60,13 +60,15 @@ RUN fc-cache -f -v
 RUN rm -rf /home/pptruser/node_modules && \
     mkdir -p \
       /.cache/fontconfig \
-      /blitzbrowser/browsers \
       /blitzbrowser/user-data \
+      /blitzbrowser/extensions \
+      /blitzbrowser/browsers \
       /var/cache/fontconfig && \
     chmod -R 777 \
       /.cache/fontconfig \
-      /blitzbrowser/browsers \
       /blitzbrowser/user-data \
+      /blitzbrowser/extensions \
+      /blitzbrowser/browsers \
       /var/cache/fontconfig
 
 WORKDIR /home/pptruser
