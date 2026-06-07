@@ -4,6 +4,7 @@
 
 - **Never omit `--cdp-url`** — every command must include the CDP URL; browser-use does not persist connections between commands
 - **`--cdp-url` is a global flag** — it must come before the subcommand
+- **Always include `apiKey` in the URL** — if `CLOSEDBROWSER_API_KEY` is set, the CDP URL must include `?apiKey=$CLOSEDBROWSER_API_KEY`. Forgetting this causes "WebSocket connection closed" immediately.
 
 ## Connect
 
@@ -12,14 +13,21 @@
 browser-use does NOT persist connections — pass `--cdp-url` on every command:
 
 ```bash
-browser-use --cdp-url ws://localhost:9999 open https://example.com
-browser-use --cdp-url ws://localhost:9999 state    # must repeat URL
-browser-use --cdp-url ws://localhost:9999 click 5   # must repeat URL
+browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" open https://example.com
+browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" state    # must repeat URL
+browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" click 5   # must repeat URL
+```
+
+**If a previous session exists in a failed state**, close it before opening a new one:
+
+```bash
+browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" close
+browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" open https://example.com
 ```
 
 `--cdp-url` accepts a port number or full URL:
 - Port: `--cdp-url 9222` (connects to `localhost:9222`)
-- URL: `--cdp-url ws://localhost:9999` or `--cdp-url wss://browser.example.com`
+- URL: `--cdp-url ws://localhost:9999` or `--cdp-url "wss://browser.example.com?apiKey=$CLOSEDBROWSER_API_KEY"`
 
 To close:
 
@@ -42,6 +50,8 @@ browser-use --cdp-url <url> close
 ```
 
 **Always run `state` before interacting with elements.** Returns page URL, title, and clickable elements with numeric indices.
+
+**Close the browser when done.** Closing frees resources and is best practice. But closing destroys all browser state — only close when absolutely certain all work is finished. If there is any doubt, ask the user before closing.
 
 ## Command Reference
 
@@ -112,5 +122,7 @@ See SKILL.md for shared troubleshooting (connection refused, 400 errors, 401 Una
 
 | Error | Action |
 |-------|--------|
+| "WebSocket connection closed" immediately | Missing `apiKey` query param. Add `?apiKey=$CLOSEDBROWSER_API_KEY` to the CDP URL. |
 | Invalid element index / Element not found | Re-run `state` after page changes. |
+| Session in "failed" state | Close the stale session first: `browser-use --cdp-url <url> close`, then reconnect |
 | 401 Unauthorized | Verify `$CLOSEDBROWSER_API_KEY` is correct |

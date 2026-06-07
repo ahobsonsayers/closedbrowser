@@ -63,8 +63,11 @@ echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
 
 - **Never install tools for the user**
 - **Never launch a local browser** — only external CDP
+- **Always include `apiKey` in the URL** — if `CLOSEDBROWSER_API_KEY` is set, the CDP URL **must** include `?apiKey=$CLOSEDBROWSER_API_KEY`. Without it, the connection will close immediately with no useful error. This is the most common failure mode.
 - **Default profile:** Use `CLOSEDBROWSER_DEFAULT_PROFILE` if set. Do NOT set `userDataId` manually. Override only if user explicitly says: no persistence, different profile, or no profile.
 - **No profile:** If user requests anonymous/temp/private OR `CLOSEDBROWSER_DEFAULT_PROFILE` is not set AND user says "no profile", **omit `userDataId` entirely**. Warn: "All browser state will be lost on close. Set CLOSEDBROWSER_DEFAULT_PROFILE for persistence."
+- **Stale sessions:** If a previous session exists in a "failed" or unexpected state, close it before opening a new one. Always close before reconnecting.
+- **Close the browser when done.** Closing frees resources and is best practice. But closing destroys all browser state — only close when you are absolutely certain all work is finished. If there is any doubt, ask the user before closing.
 
 ## Query Parameters
 
@@ -75,9 +78,9 @@ Query params go directly after the host: `ws://host:port?...`
 | `apiKey` | Only if `API_KEY` set | Authentication |
 | `userDataId` | Optional | Session profile. Uses `CLOSEDBROWSER_DEFAULT_PROFILE` by default. |
 | `liveView` | Optional | Enable real-time interaction |
-| `headless` | Optional | `true`/`false` — for anti-bot |
-| `stealth` | Optional | `true`/`false` — for anti-bot |
 | `proxyUrl` | Optional | `http://user:pass@host:port` |
+| `timezone` | Optional | Override browser timezone |
+| `browserVersion` | Optional | `default`, `latest`, or specific version |
 
 **User data pattern:** `/^[a-zA-Z0-9-_]{1,64}$/`
 
@@ -90,8 +93,8 @@ ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY
 # With live view
 ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true
 
-# Anti-bot (headful + stealth)
-ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&headless=false&stealth=true
+# With proxy
+ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&proxyUrl=http://user:pass@proxy:8080
 ```
 
 ## Live View
@@ -100,11 +103,11 @@ Live view **cannot be toggled** on an existing session. Close and reconnect:
 
 ```bash
 # Enable
-agent-browser --cdp ws://localhost:9999 close
+agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" close
 agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE&liveView=true" open https://example.com
 
 # Disable
-agent-browser --cdp ws://localhost:9999 close
+agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" close
 agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE" open https://example.com
 ```
 
@@ -129,10 +132,12 @@ The `/browsers/{id}/live-view` path is appended automatically.
 
 | Error | Action |
 |-------|--------|
+| "WebSocket connection closed" immediately | Missing `apiKey` query param. Add `?apiKey=$CLOSEDBROWSER_API_KEY` to the CDP URL. |
 | Connection refused | Check URL, protocol (`ws://` vs `wss://`), container running. Try other protocol. |
 | 400 Bad Request | Check URL format and query params |
 | 401 Unauthorized | Missing or invalid apiKey |
 | "Session already running with different config" | Use different `userDataId` or close existing session |
+| Session in "failed" state | Close the stale session first: `browser-use --cdp-url <url> close` or `agent-browser --cdp <url> close`, then reconnect |
 | CDP connection dropped | Remote browser closed due to inactivity. Check container logs. |
 | Live view not working | Ensure `liveView=true` in URL params |
 
