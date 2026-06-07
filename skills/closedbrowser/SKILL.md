@@ -67,6 +67,17 @@ echo "browser-use: $(which browser-use 2>/dev/null || echo NOT_FOUND)"
 - **Default profile:** Use `CLOSEDBROWSER_DEFAULT_PROFILE` if set. Do NOT set `userDataId` manually. Override only if user explicitly says: no persistence, different profile, or no profile.
 - **No profile:** If user requests anonymous/temp/private OR `CLOSEDBROWSER_DEFAULT_PROFILE` is not set AND user says "no profile", **omit `userDataId` entirely**. Warn: "All browser state will be lost on close. Set CLOSEDBROWSER_DEFAULT_PROFILE for persistence."
 - **Stale sessions:** If a previous session exists in a "failed" or unexpected state, close it before opening a new one. Always close before reconnecting.
+- **Session-identity params (`liveView`, `userDataId`) must be consistent across all commands in a session.** The CLI matches sessions by the full CDP URL including query params. Opening with `liveView=true` but omitting it on a later command produces "Session already running with different config". Once set, include the same params on every command for that session.
+
+  ```bash
+  # Wrong: opened with liveView=true, next command omits it
+  agent-browser --cdp "ws://host?apiKey=$KEY&liveView=true" open https://example.com
+  agent-browser --cdp "ws://host?apiKey=$KEY" snapshot -i  # FAILS: different config
+
+  # Right: same params on every command
+  agent-browser --cdp "ws://host?apiKey=$KEY&liveView=true" open https://example.com
+  agent-browser --cdp "ws://host?apiKey=$KEY&liveView=true" snapshot -i
+  ```
 - **Close the browser when done.** Closing frees resources and is best practice. But closing destroys all browser state — only close when you are absolutely certain all work is finished. If there is any doubt, ask the user before closing.
 
 ## Query Parameters
