@@ -1,6 +1,6 @@
 # closedbrowser
 
-A containerised Chromium browser built on [BlitzBrowser](https://github.com/blitzbrowser/blitzbrowser), with I Still Don't Care About Cookies and NopeCHA pre-installed.
+A containerised Chromium browser built on [BlitzBrowser](https://github.com/blitzbrowser/blitzbrowser), with uBlock Origin Lite, I Still Don't Care About Cookies, and NopeCHA pre-installed.
 
 ## Usage
 
@@ -87,7 +87,7 @@ docker compose up -d
 
 ### Extensions
 
-[I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies) and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
+[uBlock Origin Lite](https://github.com/uBlockOrigin/uBOL-home), [I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies), and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
 
 To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `./extensions/` on the host and restart the container.
 

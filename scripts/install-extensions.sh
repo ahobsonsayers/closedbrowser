@@ -43,7 +43,8 @@ install_extension() {
 rm -rf "$GLOBAL_EXTENSIONS_DIR"
 mkdir -p "$GLOBAL_EXTENSIONS_DIR"
 
-# Install extensions
+# Install extensions (order matters — uBlock first)
+install_extension "uBlockOrigin/uBOL-home" "ublock-origin-lite"
 install_extension "OhMyGuus/I-Still-Dont-Care-About-Cookies" "isdcac"
 install_extension "NopeCHALLC/nopecha-extension" "nopecha"
 
