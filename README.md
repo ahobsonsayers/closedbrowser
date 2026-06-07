@@ -37,25 +37,19 @@ wss://browser.example.com
 If `CLOSEDBROWSER_API_KEY` is set, it's appended as a query param:
 
 ```
-ws://localhost:9999/?apiKey=YOUR_API_KEY
+ws://localhost:9999?apiKey=YOUR_API_KEY
 ```
 
 For persistence, use `userDataId`:
 
 ```
-ws://localhost:9999/?apiKey=YOUR_API_KEY&userDataId=my-profile
-```
-
-For sites with bot detection (Cloudflare, DataDome, etc.), add `headless=false&stealth=true`:
-
-```
-ws://localhost:9999/?apiKey=YOUR_API_KEY&headless=false&stealth=true
+ws://localhost:9999?apiKey=YOUR_API_KEY&userDataId=my-profile
 ```
 
 For live view, add `liveView=true`:
 
 ```
-ws://localhost:9999/?apiKey=YOUR_API_KEY&userDataId=my-profile&liveView=true
+ws://localhost:9999?apiKey=YOUR_API_KEY&userDataId=my-profile&liveView=true
 ```
 
 ## Running
@@ -73,23 +67,23 @@ docker compose up -d
 
 ## Volumes
 
-Mount a single `data` directory to persist browser data:
-
 ```yaml
 volumes:
   - ./data:/data
+  - ./profiles:/blitzbrowser/user-data
+  - ./browsers:/blitzbrowser/browsers
 ```
 
-| Directory           | Description                                       |
-| ------------------- | ------------------------------------------------- |
-| `/data/profiles/`   | Browser profile (cookies, history, local storage) |
-| `/data/downloads/`  | Downloaded files                                  |
-| `/data/extensions/` | Custom extensions (must contain `manifest.json`)  |
+| Directory                   | Description                                       |
+| --------------------------- | ------------------------------------------------- |
+| `/data/extensions/`         | Custom extensions (must contain `manifest.json`)  |
+| `/blitzbrowser/user-data`   | Browser profiles (cookies, local storage)         |
+| `/blitzbrowser/browsers`   | Downloaded browser binaries                        |
 
-**Note:** Create the `./data` directory on the host before running to prevent permission issues:
+**Note:** Create the directories on the host before running to prevent permission issues:
 
 ```bash
-mkdir -p ./data
+mkdir -p ./data ./profiles ./browsers
 docker compose up -d
 ```
 
@@ -128,32 +122,29 @@ openssl rand -hex 32
 
 ## CDP Query Parameters
 
-Append query params to the WebSocket URL after a trailing slash:
+Append query params to the WebSocket URL:
 
 ```
-ws://localhost:9999?headless=false&stealth=true&userDataId=my-profile
+ws://localhost:9999?userDataId=my-profile&liveView=true
 ```
 
-### Supported Parameters
+### Browser Properties
 
 | Parameter          | Description                                                       | Example                          |
 | ------------------ | ----------------------------------------------------------------- | -------------------------------- |
-| `apiKey`           | Authentication token                                              | `?apiKey=YOUR_API_KEY`           |
 | `userDataId`       | Persist session data (matches `/^[a-zA-Z0-9-_]{1,64}$/`)        | `?userDataId=my-profile`         |
 | `userDataReadOnly` | Load profile without saving changes (`true`/`false`)             | `?userDataReadOnly=true`         |
 | `liveView`         | Enable live view in dashboard                                     | `?liveView=true`                  |
-| `headless`         | Run headless (`true`/`false`) — use `false` for bot protection   | `?headless=false`                 |
-| `stealth`          | Enable stealth mode                                               | `?stealth=true`                  |
 | `proxyUrl`         | HTTP proxy URL (`http://user:pass@host:port`)                    | `?proxyUrl=http://...`           |
 | `timezone`         | Override browser timezone                                         | `?timezone=Europe/London`        |
 | `browserVersion`   | Chrome version (`default`, `latest`, or specific version)        | `?browserVersion=latest`         |
 
-## Volumes (internal)
+### Authentication
 
-BlitzBrowser stores internal data in the `/blitzbrowser` folder:
-
-- User data folder: `/blitzbrowser/user-data`
-- Browser binaries: `/blitzbrowser/browsers`
+| Method | Format |
+| ------ | ------ |
+| Query param | `?apiKey=YOUR_API_KEY` |
+| HTTP header | `x-api-key: YOUR_API_KEY` |
 
 ## Docker Compose
 
@@ -163,13 +154,15 @@ services:
     container_name: closedbrowser-api
     image: arranhs/closedbrowser:latest
     restart: unless-stopped
-    shm_size: 2g
+    shm_size: 1g
     networks:
       - closedbrowser
     ports:
       - 9999:9999
     volumes:
       - ./data:/data
+      - ./profiles:/blitzbrowser/user-data
+      - ./browsers:/blitzbrowser/browsers
     environment:
       - API_KEY=my-secret-api-key
       - TZ=Europe/London
@@ -190,4 +183,3 @@ services:
 networks:
   closedbrowser:
 ```
-
