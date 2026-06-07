@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BROWSER_URL="ws://localhost:3000/?headless=false&stealth=true"
+BROWSER_URL="ws://localhost:9999"
 TEST_URL="https://bot-detector.rebrowser.net/"
 
 # Cleanup on exit

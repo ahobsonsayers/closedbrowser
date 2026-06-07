@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BROWSER_URL="ws://localhost:3000/?headless=false&stealth=true"
+BROWSER_URL="ws://localhost:9999"
 TEST_URL="https://abrahamjuliot.github.io/creepjs/"
 
 # Cleanup on exit
