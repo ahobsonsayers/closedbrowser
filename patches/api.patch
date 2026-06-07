@@ -1,5 +1,3 @@
-diff --git a/blitzbrowser/src/components/browser-instance.process.ts b/blitzbrowser/src/components/browser-instance.process.ts
-index ed6a127..cb4901b 100644
 --- a/blitzbrowser/src/components/browser-instance.process.ts
 +++ b/blitzbrowser/src/components/browser-instance.process.ts
 @@ -1,5 +1,6 @@
@@ -9,7 +7,7 @@ index ed6a127..cb4901b 100644
  import { exit } from 'process';
  import puppeteer, { Browser } from 'puppeteer';
  
-@@ -169,6 +170,17 @@ class BrowserInstanceProcess {
+@@ -169,12 +170,24 @@
      async #createPuppeteerProcess() {
          console.log('Creating puppeteer process');
  
@@ -27,7 +25,14 @@ index ed6a127..cb4901b 100644
          this.#puppeteer_process = await puppeteer.launch({
              headless: false,
              executablePath: this.#browser_executable_path,
-@@ -191,14 +203,17 @@ class BrowserInstanceProcess {
+             userDataDir: this.#user_data_folder,
+             dumpio: true,
+             handleSIGTERM: false,
++            ignoreDefaultArgs: ['--disable-extensions'],
+             args: [
+                 `--remote-debugging-port=${this.#cdp_port}`,
+                 '--remote-debugging-address=0.0.0.0',
+@@ -191,14 +204,17 @@
                  '--disable-features=TranslateUI', // Disables the translate UI
                  '--disable-background-networking',
                  '--disable-sync',
