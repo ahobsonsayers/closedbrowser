@@ -9,7 +9,7 @@ services:
     ports:
       - 9999:9999
     volumes:
-      - ./data:/data
+      - ./blitzbrowser:/blitzbrowser
     environment:
       - API_KEY=my-secret-api-key # Can be omitted for unsecured access
       - TZ=Europe/London
@@ -24,7 +24,7 @@ services:
       - 3000:3000
     environment:
       - BLITZBROWSER_API_URL=http://localhost:9999 # Must be accessible from your browser
-      - BLITZBROWSER_API_KEY=my-secret-api-key # Can be omitted if also ommitted on api
+      - BLITZBROWSER_API_KEY=my-secret-api-key # Can be omitted if also omitted on api
       - HTTPS_DISABLED=true
 
 networks:

@@ -28,8 +28,9 @@ RUN pnpm build
 
 FROM ghcr.io/puppeteer/puppeteer:latest
 
-ENV MOUNT_DIR=/data
 ENV APP_DIR=/home/pptruser
+ENV MOUNT_DIR=/blitzbrowser
+
 ENV GLOBAL_EXTENSIONS_DIR=$APP_DIR/extensions
 ENV USER_EXTENSIONS_DIR=$MOUNT_DIR/extensions
 
