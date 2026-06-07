@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Create folder structure
-mkdir -p /data "$USER_EXTENSIONS_DIR"
-chown -R pptruser:pptruser /data || true
+mkdir -p "$MOUNT_DIR" "$USER_EXTENSIONS_DIR"
+chown -R pptruser:pptruser "$MOUNT_DIR" || true
 
 # Configure NopeCHA with API Key
 if [[ -n ${EXTENSION_NOPECHA_API_KEY:-} ]]; then

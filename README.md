@@ -69,21 +69,19 @@ docker compose up -d
 
 ```yaml
 volumes:
-  - ./data:/data
-  - ./profiles:/blitzbrowser/user-data
-  - ./browsers:/blitzbrowser/browsers
+  - ./blitzbrowser:/blitzbrowser
 ```
 
-| Directory                   | Description                                       |
-| --------------------------- | ------------------------------------------------- |
-| `/data/extensions/`         | Custom extensions (must contain `manifest.json`)  |
-| `/blitzbrowser/user-data`   | Browser profiles (cookies, local storage)         |
-| `/blitzbrowser/browsers`   | Downloaded browser binaries                        |
+| Directory                    | Description                                          |
+| ---------------------------- | ---------------------------------------------------- |
+| `/blitzbrowser/extensions/` | Custom extensions (must contain `manifest.json`)    |
+| `/blitzbrowser/user-data`   | Browser profiles (cookies, local storage)            |
+| `/blitzbrowser/browsers`   | Downloaded browser binaries                          |
 
 **Note:** Create the directories on the host before running to prevent permission issues:
 
 ```bash
-mkdir -p ./data ./profiles ./browsers
+mkdir -p ./blitzbrowser
 docker compose up -d
 ```
 
@@ -91,7 +89,7 @@ docker compose up -d
 
 [I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies) and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
 
-To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `data/extensions/` and restart the container. Requires the `data` mount above.
+To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `./extensions/` on the host and restart the container.
 
 ## Environment variables
 
@@ -160,9 +158,7 @@ services:
     ports:
       - 9999:9999
     volumes:
-      - ./data:/data
-      - ./profiles:/blitzbrowser/user-data
-      - ./browsers:/blitzbrowser/browsers
+      - ./blitzbrowser:/blitzbrowser
     environment:
       - API_KEY=my-secret-api-key
       - TZ=Europe/London
