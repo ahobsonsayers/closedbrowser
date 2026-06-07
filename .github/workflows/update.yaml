@@ -11,7 +11,7 @@ jobs:
     uses: ahobsonsayers/github-workflows/.github/workflows/docker-update-app-version.yaml@main
     secrets: inherit
     with:
-      app-name: Blitzbrowser
+      app-name: BlitzBrowser
       dockerfile: api.dockerfile
       version-arg: BLITZBROWSER_COMMIT
       version-source: github-commit
@@ -22,7 +22,7 @@ jobs:
     uses: ahobsonsayers/github-workflows/.github/workflows/docker-update-app-version.yaml@main
     secrets: inherit
     with:
-      app-name: Blitzbrowser Dashboard
+      app-name: BlitzBrowser Dashboard
       dockerfile: app.dockerfile
       version-arg: BLITZBROWSER_COMMIT
       version-source: github-commit
