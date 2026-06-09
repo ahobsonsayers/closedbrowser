@@ -1,3 +1,18 @@
+diff --git a/blitzbrowser/src/components/browser-instance.component.ts b/blitzbrowser/src/components/browser-instance.component.ts
+index 7f035f9..0ead4ea 100644
+--- a/blitzbrowser/src/components/browser-instance.component.ts
++++ b/blitzbrowser/src/components/browser-instance.component.ts
+@@ -164,7 +164,7 @@ export class BrowserInstance extends EventEmitter<BrowserInstanceEvents> {
+     super();
+     this.#browser_pool_service = this.module_ref.get(BrowserPoolService);
+     this.#logger = new Logger(`${BrowserInstance.name}|${id}`);
+-    this.#user_data_folder = `/home/pptruser/user-data/${id}`;
++    this.#user_data_folder = `${process.env.HOME || '/app'}/user-data/${id}`;
+   }
+ 
+   get vnc_enabled() {
+diff --git a/blitzbrowser/src/components/browser-instance.process.ts b/blitzbrowser/src/components/browser-instance.process.ts
+index ed6a127..ed9c896 100644
 --- a/blitzbrowser/src/components/browser-instance.process.ts
 +++ b/blitzbrowser/src/components/browser-instance.process.ts
 @@ -1,5 +1,6 @@
@@ -7,7 +22,7 @@
  import { exit } from 'process';
  import puppeteer, { Browser } from 'puppeteer';
  
-@@ -169,12 +170,24 @@
+@@ -169,36 +170,51 @@ class BrowserInstanceProcess {
      async #createPuppeteerProcess() {
          console.log('Creating puppeteer process');
  
@@ -32,15 +47,34 @@
              args: [
                  `--remote-debugging-port=${this.#cdp_port}`,
                  '--remote-debugging-address=0.0.0.0',
-@@ -191,14 +204,17 @@
-                 '--disable-features=TranslateUI', // Disables the translate UI
+                 '--no-first-run',
+                 '--no-default-browser-check',
+                 `--display=${this.#display}`,
+-                '--disable-breakpad', // Disables crash reporting
+-                '--disable-component-update', // Disables updates to internal components
+-                '--disable-print-preview', // Disables print preview
+-                '--disable-domain-reliability', // Disables domain reliability service(client-side reliability monitoring system for Google sites)
+-                '--disk-cache-dir=/dev/null', // Prevents disk caching
+-                '--no-pings', // Disables hyperlink auditing pings
+-                '--disable-notifications', // Prevents web push notifications
+-                '--disable-features=TranslateUI', // Disables the translate UI
++                '--disable-breakpad',
++                '--disable-component-update',
++                '--disable-print-preview',
++                '--disable-domain-reliability',
++                '--disk-cache-dir=/dev/null',
++                '--no-pings',
++                '--disable-notifications',
++                '--disable-features=TranslateUI',
                  '--disable-background-networking',
                  '--disable-sync',
 -                '--disable-extensions',
                  '--disable-signin-promo',
                  '--disable-gpu',
-                 '--metrics-recording-only', // Record metrics, but doesn't report them
-                 '--disable-features=PersistentHistograms', // Prevents generation of BrowserMetrics files on disk
+-                '--metrics-recording-only', // Record metrics, but doesn't report them
+-                '--disable-features=PersistentHistograms', // Prevents generation of BrowserMetrics files on disk
++                '--metrics-recording-only',
++                '--disable-features=PersistentHistograms',
                  `--start-maximized`,
                  `--proxy-server=http://127.0.0.1:${this.#proxy_server_port}`,
 -                this.#disable_shm ? '--disable-dev-shm-usage' : undefined
@@ -52,3 +86,26 @@
              ].filter(s => typeof s === 'string'),
              env: {
                  TZ: this.#timezone
+diff --git a/blitzbrowser/src/services/browser-version-managers/index.ts b/blitzbrowser/src/services/browser-version-managers/index.ts
+index f9462af..a6da56d 100644
+--- a/blitzbrowser/src/services/browser-version-managers/index.ts
++++ b/blitzbrowser/src/services/browser-version-managers/index.ts
+@@ -1,4 +1,4 @@
+-export const BROWSERS_FOLDER = '/blitzbrowser/browsers';
++export const BROWSERS_FOLDER = `${process.env.DATA_DIR || '/data'}/browsers`;
+ 
+ export type Version = 'latest' | 'default' | (string & {});
+ 
+diff --git a/blitzbrowser/src/services/user-data.service.ts b/blitzbrowser/src/services/user-data.service.ts
+index 619e2c2..afb3d60 100644
+--- a/blitzbrowser/src/services/user-data.service.ts
++++ b/blitzbrowser/src/services/user-data.service.ts
+@@ -27,7 +27,7 @@ export abstract class UserDataService {
+ @Injectable()
+ export class LocalUserDataService extends UserDataService {
+ 
+-    private static readonly USER_DATA_FOLDER = '/blitzbrowser/user-data';
++    private static readonly USER_DATA_FOLDER = `${process.env.DATA_DIR || '/data'}/user-data`;
+ 
+     readonly #logger = new Logger(LocalUserDataService.name);
+ 

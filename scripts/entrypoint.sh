@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Create folder structure
-mkdir -p "$MOUNT_DIR" "$USER_EXTENSIONS_DIR"
-chown -R pptruser:pptruser "$MOUNT_DIR" || true
+mkdir -p "$DATA_DIR" "$USER_EXTENSIONS_DIR"
+chown -R browser:browser "$DATA_DIR" || true
 
 # Configure NopeCHA with API Key
 if [[ -n ${EXTENSION_NOPECHA_API_KEY:-} ]]; then
@@ -12,6 +12,6 @@ if [[ -n ${EXTENSION_NOPECHA_API_KEY:-} ]]; then
   mv "${MANIFEST}.tmp" "$MANIFEST"
 fi
 
-# Run original base image entrypoint (as pptruser)
-cd "$APP_DIR"
-exec gosu pptruser node dist/main.js
+# Run as browser user
+cd "$HOME"
+exec gosu browser bun dist/main.js

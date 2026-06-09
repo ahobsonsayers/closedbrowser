@@ -49,4 +49,4 @@ install_extension "OhMyGuus/I-Still-Dont-Care-About-Cookies" "isdcac"
 install_extension "NopeCHALLC/nopecha-extension" "nopecha"
 
 # Fix extensions directory permissions
-chown -R pptruser:pptruser "$GLOBAL_EXTENSIONS_DIR"
+chown -R browser:browser "$GLOBAL_EXTENSIONS_DIR"

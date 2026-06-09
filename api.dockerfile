@@ -10,7 +10,7 @@ RUN apk add --no-cache \
 RUN corepack enable && \
     corepack prepare pnpm@9 --activate
 
-WORKDIR /blitzbrowser
+WORKDIR /app
 
 # Clone code
 RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
@@ -20,25 +20,34 @@ RUN git clone https://github.com/blitzbrowser/blitzbrowser . && \
 COPY patches /tmp/patches
 RUN git apply /tmp/patches/api.patch
 
-WORKDIR /blitzbrowser/blitzbrowser
+WORKDIR /app/blitzbrowser
 
 # Build application
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
-FROM ghcr.io/puppeteer/puppeteer:latest
+FROM cloakhq/cloakbrowser:latest AS cloakbrowser
 
-ENV APP_DIR=/home/pptruser
-ENV MOUNT_DIR=/blitzbrowser
+# Move cloakbrowser to a stable location
+RUN CLOAKBROWSER_DIR=$(find /root/.cloakbrowser -maxdepth 1 -type d -name "chromium-*" | head -1) && \
+    mv "$CLOAKBROWSER_DIR" /chromium
 
-ENV GLOBAL_EXTENSIONS_DIR=$APP_DIR/extensions
-ENV USER_EXTENSIONS_DIR=$MOUNT_DIR/extensions
+FROM debian:stable-slim
 
-USER root
+ENV HOME=/app
+ENV DATA_DIR=/data
 
-# Install system dependencies
+ENV BROWSER_EXECUTABLE_PATH=/opt/cloakbrowser/chrome
+ENV CLOAKBROWSER_AUTO_UPDATE=false
+
+ENV GLOBAL_EXTENSIONS_DIR=$HOME/extensions
+ENV USER_EXTENSIONS_DIR=$DATA_DIR/extensions
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    # BlitzBrowser dependencies
+    ca-certificates \
     curl \
     fluxbox \
     fonts-noto-color-emoji \
@@ -46,37 +55,72 @@ RUN apt-get update && \
     jq \
     tini \
     unzip \
+    x11vnc \
     xvfb \
-    x11vnc && \
+    # CloakBrowser dependencies
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcairo-gobject2 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libfontconfig1 \
+    libgbm1 \
+    libgdk-pixbuf-2.0-0 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    libxshmfence1 \
+    libxss1 \
+    libxtst6 && \
     rm -rf /var/lib/apt/lists/*
 
-# Install gosu
+# Install extra dependancies
 COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
+COPY --chmod=0755 --from=oven/bun:latest /usr/local/bin/bun /usr/local/bin/bun
 
-# Font cache setup
-RUN fc-cache -f -v
-
-# Directory setup
-RUN rm -rf /home/pptruser/node_modules && \
+# User and directory setup
+RUN useradd browser --uid 1001 --no-create-home && \
+    rm -rf /root && \
     mkdir -p \
-      /.cache/fontconfig \
-      /blitzbrowser/user-data \
-      /blitzbrowser/extensions \
-      /blitzbrowser/browsers \
+      $HOME \
+      /app/.cache/fontconfig \
+      /var/cache/fontconfig \
+      /data/user-data \
+      /data/extensions \
+      /data/browsers && \
+    chown browser:browser \
+      $HOME \
+      /data/user-data \
+      /data/extensions \
+      /data/browsers \
+      /app/.cache/fontconfig \
       /var/cache/fontconfig && \
-    chmod -R 777 \
-      /.cache/fontconfig \
-      /blitzbrowser/user-data \
-      /blitzbrowser/extensions \
-      /blitzbrowser/browsers \
-      /var/cache/fontconfig
+    fc-cache -f -v
 
-WORKDIR /home/pptruser
+WORKDIR $HOME
 
-COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/package.json ./package.json
-COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/node_modules ./node_modules
-COPY --from=builder --chown=pptruser:pptruser /blitzbrowser/blitzbrowser/dist ./dist
-COPY --from=builder --chown=pptruser:pptruser /root/.cache/puppeteer /home/pptruser/.cache/puppeteer
+COPY --from=builder --chown=browser:browser /app/blitzbrowser/package.json ./package.json
+COPY --from=builder --chown=browser:browser /app/blitzbrowser/node_modules ./node_modules
+COPY --from=builder --chown=browser:browser /app/blitzbrowser/dist ./dist
+
+COPY --from=cloakbrowser --chown=browser:browser /chromium/ /opt/cloakbrowser/
 
 # Install extensions
 COPY scripts/install-extensions.sh /tmp/install-extensions.sh

@@ -9,7 +9,7 @@ services:
     ports:
       - 9999:9999
     volumes:
-      - ./blitzbrowser:/blitzbrowser
+      - ./data:/data
     environment:
       - API_KEY=my-secret-api-key # Can be omitted for unsecured access
       - TZ=Europe/London
