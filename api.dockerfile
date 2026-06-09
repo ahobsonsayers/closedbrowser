@@ -96,17 +96,15 @@ COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
 COPY --chmod=0755 --from=oven/bun:latest /usr/local/bin/bun /usr/local/bin/bun
 
 # User and directory setup
-RUN useradd browser --uid 1001 --no-create-home && \
+RUN useradd browser --uid 1000 --home-dir $HOME && \
     rm -rf /root && \
     mkdir -p \
-      $HOME \
       /app/.cache/fontconfig \
       /var/cache/fontconfig \
       /data/user-data \
       /data/extensions \
       /data/browsers && \
     chown browser:browser \
-      $HOME \
       /data/user-data \
       /data/extensions \
       /data/browsers \
