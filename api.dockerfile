@@ -38,7 +38,7 @@ FROM debian:stable-slim
 ENV HOME=/app
 ENV DATA_DIR=/data
 
-ENV BROWSER_EXECUTABLE_PATH=/opt/cloakbrowser/chrome
+ENV PUPPETEER_EXECUTABLE_PATH=/opt/cloakbrowser/chrome
 ENV CLOAKBROWSER_AUTO_UPDATE=false
 
 ENV GLOBAL_EXTENSIONS_DIR=$HOME/extensions
@@ -99,17 +99,17 @@ COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
 RUN useradd browser --uid 1000 --home-dir $HOME && \
     rm -rf /root && \
     mkdir -p \
-      /app/.cache/fontconfig \
+      $HOME \
       /var/cache/fontconfig \
       /data/user-data \
-      /data/extensions \
-      /data/browsers && \
-    chown browser:browser \
-      /data/user-data \
-      /data/extensions \
       /data/browsers \
-      /app/.cache/fontconfig \
-      /var/cache/fontconfig && \
+      /data/extensions && \
+    chown browser:browser \
+      $HOME \
+      /var/cache/fontconfig \
+      /data/user-data \
+      /data/browsers \
+      /data/extensions && \
     fc-cache -f -v
 
 WORKDIR $HOME
