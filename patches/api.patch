@@ -1,5 +1,5 @@
 diff --git a/blitzbrowser/src/components/browser-instance.component.ts b/blitzbrowser/src/components/browser-instance.component.ts
-index 7f035f9..0ead4ea 100644
+index 7f035f9..8410f56 100644
 --- a/blitzbrowser/src/components/browser-instance.component.ts
 +++ b/blitzbrowser/src/components/browser-instance.component.ts
 @@ -164,7 +164,7 @@ export class BrowserInstance extends EventEmitter<BrowserInstanceEvents> {
@@ -7,7 +7,7 @@ index 7f035f9..0ead4ea 100644
      this.#browser_pool_service = this.module_ref.get(BrowserPoolService);
      this.#logger = new Logger(`${BrowserInstance.name}|${id}`);
 -    this.#user_data_folder = `/home/pptruser/user-data/${id}`;
-+    this.#user_data_folder = `${process.env.HOME || '/app'}/user-data/${id}`;
++    this.#user_data_folder = `${process.env.DATA_DIR || '/data'}/user-data/${id}`;
    }
  
    get vnc_enabled() {
