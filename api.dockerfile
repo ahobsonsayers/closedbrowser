@@ -53,6 +53,7 @@ RUN apt-get update && \
     fonts-noto-color-emoji \
     fonts-recommended \
     jq \
+    nodejs \
     tini \
     unzip \
     x11vnc \
@@ -93,7 +94,6 @@ RUN apt-get update && \
 
 # Install extra dependancies
 COPY --chmod=0755 --from=tianon/gosu:debian /gosu /usr/local/bin/gosu
-COPY --chmod=0755 --from=oven/bun:latest /usr/local/bin/bun /usr/local/bin/bun
 
 # User and directory setup
 RUN useradd browser --uid 1000 --home-dir $HOME && \

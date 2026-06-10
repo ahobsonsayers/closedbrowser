@@ -14,4 +14,4 @@ fi
 
 # Run as browser user
 cd "$HOME"
-exec gosu browser bun dist/main.js
+exec gosu browser node dist/main.js
