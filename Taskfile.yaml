@@ -54,3 +54,15 @@ tasks:
   test:creepjs:
     cmds:
       - ./tests/test-creepjs.sh
+
+  skill:install:
+    desc: Copy skill to global agents
+    cmds:
+      - mkdir -p ~/.config/opencode/agents
+      - cp -r skills/closedbrowser ~/.config/opencode/agents/
+
+  skill:install:symlink:
+    desc: Symlink skill to global agents
+    cmds:
+      - mkdir -p ~/.config/opencode/agents
+      - ln -sfr skills/closedbrowser ~/.config/opencode/agents/
