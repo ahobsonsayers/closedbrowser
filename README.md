@@ -2,9 +2,9 @@
 
 A BAAS (browser-as-a-service) image built on [BlitzBrowser](https://github.com/blitzbrowser/blitzbrowser) with [CloakBrowser](https://github.com/CloakHQ/CloakBrowser) under the hood for stealth and to bypass bot detection measures.
 
-Comes with with the extensions uBlock Origin Lite (adblocking), NopeCHA (CAPTCHA solving) and I Still Don't Care About Cookies (cookie removal) pre-installed for improved browser automation experience.
+Comes with the extensions uBlock Origin Lite (adblocking), NopeCHA (CAPTCHA solving) and I Still Don't Care About Cookies (cookie removal) pre-installed for improved browser automation experience.
 
-The image also has support for live view/control for human-in-the-loop automation, persistant session data and support for custom extensions.
+The image also has support for live view/control for human-in-the-loop automation, persistent session data and support for custom extensions.
 
 Note: This project is to build and distribute a docker image built on a series of other excellent projects (with minor patches) to provide a works-out-the-box, batteries included BAAS image.
 
