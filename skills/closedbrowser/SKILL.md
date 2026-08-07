@@ -148,7 +148,7 @@ The `/browsers/{id}/live-view` path is appended automatically.
 | 400 Bad Request | Check URL format and query params |
 | 401 Unauthorized | Missing or invalid apiKey |
 | "Session already running with different config" | Use different `userDataId` or close existing session |
-| Session in "failed" state | Close the stale session first: `browser-use --cdp-url <url> close` or `agent-browser --cdp <url> close`, then reconnect |
+| Session in "failed" state | Close the stale session first: `browser-use close --all` or `agent-browser --cdp <url> close`, then reconnect |
 | CDP connection dropped | Remote browser closed due to inactivity. Check container logs. |
 | Live view not working | Ensure `liveView=true` in URL params |
 

@@ -2,118 +2,117 @@
 
 ## Rules
 
-- **Never omit `--cdp-url`** — every command must include the CDP URL; browser-use does not persist connections between commands
-- **`--cdp-url` is a global flag** — it must come before the subcommand
+- Connect via the `BU_CDP_WS` env var and control the browser by piping **raw Python on stdin**.
 - **Always include `apiKey` in the URL** — if `CLOSEDBROWSER_API_KEY` is set, the CDP URL must include `?apiKey=$CLOSEDBROWSER_API_KEY`. Forgetting this causes "WebSocket connection closed" immediately.
+- **Build the env var from existing vars** — never hardcode or echo the API key. Use `$VAR` substitution.
 
 ## Connect
 
 **Always read SKILL.md first for environment setup.** The main skill handles `CLOSEDBROWSER_API_URL`, `CLOSEDBROWSER_API_KEY`, and `CLOSEDBROWSER_DEFAULT_PROFILE` setup.
 
-browser-use does NOT persist connections — pass `--cdp-url` on every command:
+Build the CDP env var from existing vars (never hardcode/echo the key):
 
 ```bash
-browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" open https://example.com
-browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" state    # must repeat URL
-browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" click 5   # must repeat URL
+export BU_CDP_WS="${CLOSEDBROWSER_API_URL}?apiKey=${CLOSEDBROWSER_API_KEY}&userDataId=${CLOSEDBROWSER_DEFAULT_PROFILE}"
+```
+
+Then pipe raw Python on stdin. The daemon persists the session across `browser-use` invocations, so you only set the env var once per shell:
+
+```bash
+browser-use <<'PY'
+new_tab("https://example.com")
+wait_for_load()
+print(page_info())
+PY
 ```
 
 **If a previous session exists in a failed state**, close it before opening a new one:
 
 ```bash
-browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" close
-browser-use --cdp-url "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" open https://example.com
+browser-use close --all
+# then reconnect
+export BU_CDP_WS="${CLOSEDBROWSER_API_URL}?apiKey=${CLOSEDBROWSER_API_KEY}&userDataId=${CLOSEDBROWSER_DEFAULT_PROFILE}"
+browser-use <<'PY'
+new_tab("https://example.com")
+PY
 ```
 
-`--cdp-url` accepts a port number or full URL:
-- Port: `--cdp-url 9222` (connects to `localhost:9222`)
-- URL: `--cdp-url ws://localhost:9999` or `--cdp-url "wss://browser.example.com?apiKey=$CLOSEDBROWSER_API_KEY"`
+`BU_CDP_WS` accepts a full WebSocket URL:
+- `BU_CDP_WS=ws://localhost:9999`
+- `BU_CDP_WS="wss://browser.example.com?apiKey=$CLOSEDBROWSER_API_KEY"`
 
-To close:
-
-```bash
-browser-use --cdp-url <url> close
-```
+**Pitfall:** `BU_CDP_URL` (the http/https variant) only speaks `http/https`. A WebSocket endpoint (`ws://`/`wss://`) MUST use `BU_CDP_WS`, not `BU_CDP_URL`.
 
 ## Workflow
 
-```bash
-browser-use --cdp-url <url> open https://example.com
-browser-use --cdp-url <url> wait selector "body"
-browser-use --cdp-url <url> state
-# use indices from state to interact
-browser-use --cdp-url <url> input 12 "user@example.com"
-browser-use --cdp-url <url> click 15
-# re-run state after any navigation or DOM change
-browser-use --cdp-url <url> state
-browser-use --cdp-url <url> close
+```python
+# First navigation is new_tab(), not goto_url()
+new_tab("https://example.com")
+wait_for_load()
+print(page_info())
+
+# Interact via the accessibility tree
+nodes = cdp("Accessibility.getFullAXTree")["nodes"]
+# find the node by role/name, get its backendDOMNodeId
+q = cdp("DOM.getBoxModel", backendNodeId=n)["model"]["content"]
+x, y = sum(q[0::2])/4, sum(q[1::2])/4
+click_at_xy(x, y)
+wait_for_load()
 ```
 
-**Always run `state` before interacting with elements.** Returns page URL, title, and clickable elements with numeric indices.
+**Always re-query the AX tree before interacting** — node ids are not stable across page changes.
 
 **Close the browser when done.** Closing frees resources and is best practice. But closing destroys all browser state — only close when absolutely certain all work is finished. If there is any doubt, ask the user before closing.
 
-## Command Reference
+## Helper Reference (pre-imported, no import needed)
 
-All commands use `--cdp-url <url>` as a prefix (shortened to `<url>` below for readability).
-
-```bash
+```python
 # Navigation
-browser-use --cdp-url <url> open <target-url>
-browser-use --cdp-url <url> back
-browser-use --cdp-url <url> scroll down              # --amount N for pixels
-browser-use --cdp-url <url> scroll up
-browser-use --cdp-url <url> close
+new_tab(url)          # first navigation (NOT goto_url)
+goto_url(url)         # navigate current tab
+back()
+scroll(x, y)
 
 # Tabs
-browser-use --cdp-url <url> tab list
-browser-use --cdp-url <url> tab new [target-url]
-browser-use --cdp-url <url> tab switch <index>
-browser-use --cdp-url <url> tab close <index>
+list_tabs()
+switch_tab(target)
+close_tab(target)
 
-# State (get interactive element indices — always run before interacting)
-browser-use --cdp-url <url> state
+# State
+page_info()           # dict: url, title, dimensions
 
-# Interaction (use indices from state)
-browser-use --cdp-url <url> click <index>
-browser-use --cdp-url <url> click <x> <y>            # pixel coordinates
-browser-use --cdp-url <url> input <index> "text"      # click, clear, type
-browser-use --cdp-url <url> input <index> ""           # clear field
-browser-use --cdp-url <url> type "text"                # type into focused element
-browser-use --cdp-url <url> select <index> "option"
-browser-use --cdp-url <url> keys "Enter"               # also "Control+a", etc.
-browser-use --cdp-url <url> hover <index>
-browser-use --cdp-url <url> dblclick <index>
-browser-use --cdp-url <url> rightclick <index>
-browser-use --cdp-url <url> upload <index> <path>
+# Interaction
+click_at_xy(x, y)     # viewport px
+type_text(text)
+fill_input(selector, text)
+press_key(key)        # e.g. "Enter", "Control+a"
+scroll(x, y)
 
 # Wait
-browser-use --cdp-url <url> wait selector "css"        # --state visible|hidden, --timeout ms
-browser-use --cdp-url <url> wait text "text"
+wait_for_load()
+wait_for_element(selector)
 
 # Screenshots
-browser-use --cdp-url <url> screenshot [path.png]      # base64 if no path
-browser-use --cdp-url <url> screenshot --full
+capture_screenshot(path)
 
 # Data Extraction
-browser-use --cdp-url <url> eval "js code"
-browser-use --cdp-url <url> get title
-browser-use --cdp-url <url> get html [--selector "h1"]
-browser-use --cdp-url <url> get text <index>
-browser-use --cdp-url <url> get value <index>
-browser-use --cdp-url <url> get attributes <index>
-browser-use --cdp-url <url> get bbox <index>
+js(code)              # run JS, return result
+cdp("Domain.method", ...)  # raw CDP
 
-# Cookies
-browser-use --cdp-url <url> cookies get [--url <filter>]
-browser-use --cdp-url <url> cookies set <name> <value>  # --domain, --secure, etc.
-browser-use --cdp-url <url> cookies clear [--url <filter>]
-browser-use --cdp-url <url> cookies export <file>
-browser-use --cdp-url <url> cookies import <file>
+# Tab state
+ensure_real_tab()     # if current tab is stale/internal
+```
 
-# Session
-browser-use --cdp-url <url> close
-browser-use close --all                            # hard reset all sessions
+## Element Interaction (AX tree approach)
+
+Use the accessibility-tree approach to locate and click elements:
+
+```python
+nodes = cdp("Accessibility.getFullAXTree")["nodes"]
+# filter by role/name, get backendDOMNodeId
+q = cdp("DOM.getBoxModel", backendNodeId=n)["model"]["content"]
+x, y = sum(q[0::2])/4, sum(q[1::2])/4   # viewport px for click_at_xy
+click_at_xy(x, y)
 ```
 
 ## Troubleshooting
@@ -123,6 +122,7 @@ See SKILL.md for shared troubleshooting (connection refused, 400 errors, 401 Una
 | Error | Action |
 |-------|--------|
 | "WebSocket connection closed" immediately | Missing `apiKey` query param. Add `?apiKey=$CLOSEDBROWSER_API_KEY` to the CDP URL. |
-| Invalid element index / Element not found | Re-run `state` after page changes. |
-| Session in "failed" state | Close the stale session first: `browser-use --cdp-url <url> close`, then reconnect |
+| Element not found | Re-query the AX tree after page changes. |
+| Session in "failed" state | Close the stale session first: `browser-use close --all`, then reconnect |
 | 401 Unauthorized | Verify `$CLOSEDBROWSER_API_KEY` is correct |
+| "Session already running with different config" | Use a different `userDataId` or close the existing session |
