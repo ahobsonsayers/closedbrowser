@@ -55,14 +55,15 @@ tasks:
     cmds:
       - ./tests/test-creepjs.sh
 
-  skill:install:
-    desc: Copy skill to global agents
+  skills:install:
+    desc: Install skills
+    deps: [skills:remove]
     cmds:
-      - mkdir -p ~/.config/opencode/agents
-      - cp -r skills/closedbrowser ~/.config/opencode/agents/
+      - mkdir -p ~/.agents/skills
+      - for skill in ./skills/*/; do ln -sfr "$skill" ~/.agents/skills/; done
 
-  skill:install:symlink:
-    desc: Symlink skill to global agents
+  skills:remove:
+    desc: Remove skills
     cmds:
-      - mkdir -p ~/.config/opencode/agents
-      - ln -sfr skills/closedbrowser ~/.config/opencode/agents/
+      - mkdir -p ./skills
+      - for skill in ./skills/*/; do rm -f ~/.agents/skills/"$(basename "$skill")"; done
