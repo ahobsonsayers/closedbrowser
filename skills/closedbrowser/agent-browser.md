@@ -1,41 +1,29 @@
-# closedbrowser: agent-browser Reference
+# agent-browser Reference
+
+Pure agent-browser usage. Read SKILL.md first for service setup and the CDP URL to substitute below.
 
 ## Rules
 
 - **Never run `agent-browser install`** — only connects to external browsers
-- **Never use `--stealth` or `--headed` CLI flags** — BlitzBrowser always runs headful; configure browser properties via CDP URL query params (see SKILL.md)
+- **Never use `--stealth` or `--headed` CLI flags** — the remote browser runs headful; configure browser properties via CDP URL query params (see SKILL.md)
 - **Always pass `--cdp <url>`** — include the CDP URL on every command; do not use `agent-browser connect` for persistent connections as CDP sessions can drop unexpectedly
 - **`--cdp` is a global flag** — it must come before the subcommand
-- **Always include `apiKey` in the URL** — if `CLOSEDBROWSER_API_KEY` is set, the CDP URL must include `?apiKey=$CLOSEDBROWSER_API_KEY`. Forgetting this causes "WebSocket connection closed" immediately.
 
 ## Connect
 
-**Always read SKILL.md first for environment setup.** The main skill handles `CLOSEDBROWSER_API_URL`, `CLOSEDBROWSER_API_KEY`, and `CLOSEDBROWSER_DEFAULT_PROFILE` setup.
-
-Pass `--cdp` with the full WebSocket URL **on every command**:
+Pass `--cdp` with the full WebSocket URL **on every command** (`<url>` below is the CDP URL built per SKILL.md):
 
 ```bash
-agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" open https://example.com
-agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" snapshot -i
-agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" click @e1
+agent-browser --cdp "<url>" open https://example.com
+agent-browser --cdp "<url>" snapshot -i
+agent-browser --cdp "<url>" click @e1
 ```
 
 **If a previous session exists in a failed state**, close it before opening a new one:
 
 ```bash
-agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" close
-agent-browser --cdp "ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY" open https://example.com
-```
-
-**URL resolution pattern for commands:**
-```bash
-# 1. Resolve the base URL literal from CLOSEDBROWSER_API_URL once
-# 2. Append apiKey if CLOSEDBROWSER_API_KEY is set
-# 3. Append userDataId if CLOSEDBROWSER_DEFAULT_PROFILE is set and user does NOT want anonymous
-# 4. Append other params if requested
-
-# Full URL pattern:
-agent-browser --cdp "{LITERAL_API_URL}?apiKey=$CLOSEDBROWSER_API_KEY&userDataId=$CLOSEDBROWSER_DEFAULT_PROFILE" open https://example.com
+agent-browser --cdp "<url>" close
+agent-browser --cdp "<url>" open https://example.com
 ```
 
 `--cdp` accepts a port number or full URL:
@@ -57,7 +45,7 @@ agent-browser --cdp <url> snapshot -i
 
 **Always wait for `networkidle` after navigation.** If the network never settles (streaming sites, long-polling), skip the wait and proceed to snapshot.
 
-**Close the browser when done.** Closing frees resources and is best practice. But closing destroys all browser state — only close when absolutely certain all work is finished. If there is any doubt, ask the user before closing.
+**Closing and verification:** see "Close the browser" in SKILL.md — close only when all work is done, then verify via the pool API. Use `agent-browser --cdp <url> close` (or `close --all`).
 
 ## Command Reference
 
@@ -134,7 +122,5 @@ See SKILL.md for shared troubleshooting (connection refused, 400 errors, 401 Una
 
 | Error | Action |
 |-------|--------|
-| "WebSocket connection closed" immediately | Missing `apiKey` query param. Add `?apiKey=$CLOSEDBROWSER_API_KEY` to the CDP URL. |
 | Stale @refs | Re-run `snapshot -i` after page changes. |
 | Session in "failed" state | Close the stale session first: `agent-browser --cdp <url> close`, then reconnect |
-| 401 Unauthorized | Verify `$CLOSEDBROWSER_API_KEY` is correct |
