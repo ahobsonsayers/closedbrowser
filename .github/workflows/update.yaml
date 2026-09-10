@@ -1,12 +1,12 @@
 name: Update Images
 
-permissions:
-  contents: write
-
 on:
   schedule:
     - cron: "0 1 * * 0" # Every Sunday at 1am
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   update-api:
@@ -22,6 +22,7 @@ jobs:
 
   update-app:
     name: Update app image
+    needs: update-api
     uses: ahobsonsayers/github-workflows/.github/workflows/docker-update-app-version.yaml@main
     secrets: inherit
     with:
