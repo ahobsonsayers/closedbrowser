@@ -45,9 +45,7 @@ jobs:
     name: Build API image
     needs: prepare
     uses: ahobsonsayers/github-workflows/.github/workflows/docker-build-push.yaml@main
-    secrets:
-      DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+    secrets: inherit
     with:
       dockerfile: api.dockerfile
       image-name: arranhs/closedbrowser
@@ -58,9 +56,7 @@ jobs:
     name: Build App image
     needs: prepare
     uses: ahobsonsayers/github-workflows/.github/workflows/docker-build-push.yaml@main
-    secrets:
-      DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+    secrets: inherit
     with:
       dockerfile: app.dockerfile
       image-name: arranhs/closedbrowser-app
