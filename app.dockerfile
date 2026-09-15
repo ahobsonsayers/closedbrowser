@@ -1,6 +1,6 @@
 FROM node:22-alpine AS builder
 
-ARG BLITZBROWSER_COMMIT=null
+ARG BLITZBROWSER_COMMIT=2b0082b04dd8d210954df004a9a96768c5a9cfd6
 
 # Install system dependencies
 RUN apk add --no-cache \
