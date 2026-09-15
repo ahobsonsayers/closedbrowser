@@ -1,52 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# install_extension <github-repo> <name>
+CRX_DIR="/opt/cloakbrowser/extensions"
+REGISTRY_DIR="/usr/share/chromium/extensions"
+
+CHROMIUM_VERSION=$(/opt/cloakbrowser/chrome --version | cut -d ' ' -f 2)
+
+# install_extension <name> <store-id>
 install_extension() {
-  EXTENSION_REPO="$1"
-  EXTENSION_NAME="${2,,}" # make extensions name lowercase
+  EXTENSION_NAME="${1,,}" # make lowercase
+  EXTENSION_ID="$2"
 
-  EXTENSION_URL=$(
-    curl -s "https://api.github.com/repos/$EXTENSION_REPO/releases/latest" |
-      jq -r '
-				[
-					.assets[] | select(
-						.name | ascii_downcase |
-						(contains("chrome") or contains("chromium"))
-					)
-				] |
-				sort_by(.name) |
-				.[0].browser_download_url
-			'
-  )
+  # Download crx from the chrome store
+  curl -sL --progress-bar \
+    "https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&prodversion=${CHROMIUM_VERSION}&x=id%3D${EXTENSION_ID}%26uc" \
+    -o "$CRX_DIR/$EXTENSION_NAME.crx"
 
-  if [[ -z $EXTENSION_URL ]]; then
-    echo "ERROR: No chrome extension found for $EXTENSION_REPO" >&2
+  # Get version from crx manifest
+  # unzip exits 1 on crx3 extra-bytes warning so tolerate it
+  EXTENSION_VERSION=$(
+    unzip -p "$CRX_DIR/$EXTENSION_NAME.crx" manifest.json |
+      jq -r .version
+  ) || true
+
+  if [[ -z $EXTENSION_VERSION ]]; then
+    echo "ERROR: Cannot read version from $EXTENSION_NAME.crx manifest" >&2
     exit 1
   fi
 
-  # Download and unzip extension
-  curl -sL --progress-bar "$EXTENSION_URL" -o "/tmp/$EXTENSION_NAME.zip"
-  unzip -q "/tmp/$EXTENSION_NAME.zip" -d "/tmp/$EXTENSION_NAME"
-  rm "/tmp/$EXTENSION_NAME.zip"
-
-  # Find extension directory
-  MANIFEST_PATH=$(find "/tmp/$EXTENSION_NAME" -name "manifest.json" | head -1)
-  EXTENSION_DIR=$(dirname "$MANIFEST_PATH")
-
-  # Move extension
-  mv "$EXTENSION_DIR" "$GLOBAL_EXTENSIONS_DIR/$EXTENSION_NAME"
-  rm -rf "/tmp/$EXTENSION_NAME"
+  # Register extension to external registry
+  jq -n \
+    --arg crx "$CRX_DIR/$EXTENSION_NAME.crx" \
+    --arg version "$EXTENSION_VERSION" \
+    '{external_crx: $crx, external_version: $version}' > "$REGISTRY_DIR/$EXTENSION_ID.json"
 }
 
-# Create extensions directory
+# Create directories
 rm -rf "$GLOBAL_EXTENSIONS_DIR"
-mkdir -p "$GLOBAL_EXTENSIONS_DIR"
+mkdir -p "$CRX_DIR" "$REGISTRY_DIR" "$GLOBAL_EXTENSIONS_DIR"
 
-# Install extensions (order matters — uBlock first)
-install_extension "uBlockOrigin/uBOL-home" "ublock-origin-lite"
-install_extension "OhMyGuus/I-Still-Dont-Care-About-Cookies" "isdcac"
-install_extension "NopeCHALLC/nopecha-extension" "nopecha"
+# Install extensions
+install_extension "ublock-origin-lite" "ddkjiahejlhfcafbddmgiahcphecmpfh"
+install_extension "isdcac" "edibdbjcniadpccecjdfdjjppcpchdlm"
+install_extension "nopecha" "dknlfmjaanfblgfdfebhijalfmhmjjjo"
 
-# Fix extensions directory permissions
-chown -R browser:browser "$GLOBAL_EXTENSIONS_DIR"
+# Fix permissions
+chown -R browser:browser "$CRX_DIR" "$REGISTRY_DIR"

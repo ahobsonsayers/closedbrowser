@@ -95,7 +95,7 @@ docker compose up -d
 
 ### Extensions
 
-[uBlock Origin Lite](https://github.com/uBlockOrigin/uBOL-home), [I Still Don't Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies), and [NopeCHA](https://github.com/NopeCHALLC/nopecha-extension) are pre-installed.
+[uBlock Origin Lite](https://chromewebstore.google.com/detail/ddkjiahejlhfcafbddmgiahcphecmpfh), [I Still Don't Care About Cookies](https://chromewebstore.google.com/detail/edibdbjcniadpccecjdfdjjppcpchdlm), and [NopeCHA](https://chromewebstore.google.com/detail/dknlfmjaanfblgfdfebhijalfmhmjjjo) are pre-installed from the Chrome Web Store.
 
 To add your own, drop an unpacked extension directory (must contain a `manifest.json`) into `./extensions/` on the host and restart the container.
 
@@ -114,7 +114,6 @@ openssl rand -hex 32
 | `API_KEY`                   | —       | Require authentication on all endpoints                    |
 | `MAX_BROWSER_INSTANCES`    | `99`    | Max concurrent browser sessions                            |
 | `DISABLE_SHM`               | —       | Disable shared memory (set if you can't configure `shm_size`) |
-| `EXTENSION_NOPECHA_API_KEY` | —       | NopeCHA extension API key (optional, 100 free credits/24h) |
 | `TZ`                        | `UTC`   | Timezone (e.g., `Europe/London`)                           |
 
 ### Dashboard service (closedbrowser-app)

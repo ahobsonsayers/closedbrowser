@@ -43,7 +43,7 @@ index ed6a127..ed9c896 100644
              userDataDir: this.#user_data_folder,
              dumpio: true,
              handleSIGTERM: false,
-+            ignoreDefaultArgs: ['--disable-extensions'],
++            ignoreDefaultArgs: ['--disable-extensions', '--disable-default-apps'],
              args: [
                  `--remote-debugging-port=${this.#cdp_port}`,
                  '--remote-debugging-address=0.0.0.0',
