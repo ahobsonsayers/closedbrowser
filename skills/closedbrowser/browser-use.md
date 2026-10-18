@@ -124,7 +124,7 @@ browser-use --doctor      # connection diagnostics (chrome running, daemon alive
 browser-use --reload      # restart the local daemon
 ```
 
-- **`switch_tab()` takes the targetId string from `list_tabs()`** — passing a URL raises `No target with given id found` (hit 2026-09-08). Pattern: `tabs = list_tabs()` → filter by URL → `switch_tab(t["targetId"])`.
+- **`switch_tab()` takes the targetId string from `list_tabs()`** — passing a URL raises `No target with given id found`. Pattern: `tabs = list_tabs()` → filter by URL → `switch_tab(t["targetId"])`.
 - Cloud/remote daemons: `start_remote_daemon("name")` / `stop_remote_daemon(name)` inside the Python block; the old `BU_NAME=...` env syntax is gone.
 - Page titles get a horse marker (`🐴`) appended by default; set `BH_TAB_MARKER=0` before daemon start for clean titles.
 

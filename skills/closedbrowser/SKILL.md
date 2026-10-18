@@ -9,9 +9,6 @@ required_environment_variables:
   - name: CLOSEDBROWSER_API_KEY
     prompt: API key (if the container requires auth)
     help: Optional. Only needed if the container was started with API_KEY set.
-  - name: CLOSEDBROWSER_DASHBOARD_URL
-    prompt: Dashboard base URL (e.g., https://browser.example.com)
-    help: Required for live view / live share. If unset and the user requests a live view URL, ask the user: "What is the URL of the dashboard?"
   - name: CLOSEDBROWSER_DEFAULT_PROFILE
     prompt: Default profile name (e.g., my-profile)
     help: Unset by default. Set this to persist cookies/login across sessions. All data is lost on close if this is not set and no userDataId is provided.
@@ -96,11 +93,11 @@ ws://localhost:9999?apiKey=$CLOSEDBROWSER_API_KEY&proxyUrl=http://user:pass@prox
 - **No profile:** If user requests anonymous/temp/private OR `CLOSEDBROWSER_DEFAULT_PROFILE` is not set AND user says "no profile", **omit `userDataId` entirely**. Warn: "All browser state will be lost on close. Set CLOSEDBROWSER_DEFAULT_PROFILE for persistence."
 - **Stale sessions:** If a previous session exists in a "failed" or unexpected state, close it before opening a new one. Always close before reconnecting. How to reset depends on the tool (see its reference file).
 - **Session-identity params (`liveView`, `userDataId`) must be consistent across all commands in a session.** The service matches sessions by the full CDP URL including query params. Opening with `liveView=true` but omitting it on a later command produces "Session already running with different config". Once set, include the same params on every command for that session.
-- **Persisted logins are not guaranteed.** After a backend restart or container recycle the `userDataId` profile can come back logged out (observed 2026-09-08: anonymous guest cookies despite `userDataId=default` — site showed "Log in"). Before work that assumes a logged-in account, verify the site actually shows logged-in state (page header/DOM). Never assume.
+- **Persisted logins are not guaranteed.** After a backend restart or container recycle the `userDataId` profile can come back logged out (anonymous guest cookies, site shows "Log in"). Before work that assumes a logged-in account, verify the site actually shows logged-in state (page header/DOM). Never assume.
 
 ### Close the browser
 
-**Close the browser when done — and VERIFY it actually closed.** Closing frees resources and is best practice. But closing destroys all browser state — only close when you are absolutely certain all work is finished. If there is any doubt, ask the user before closing. **Closing the agent session does NOT stop the remote browser**: the CDP session detaches but the browser instance keeps running (observed: a session ran 17+ minutes after the agent believed it was closed). After every close, verify via the pool API that the instance actually stopped:
+**Close the browser when done — and VERIFY it actually closed.** Closing frees resources and is best practice. But closing destroys all browser state — only close when you are absolutely certain all work is finished. If there is any doubt, ask the user before closing. **Closing the agent session does NOT stop the remote browser**: the CDP session detaches but the browser instance keeps running. After every close, verify via the pool API that the instance actually stopped:
 ```bash
 curl -s -H "X-API-Key: $CLOSEDBROWSER_API_KEY" "${CLOSEDBROWSER_API_URL/wss:/https:}/browser-pool"
 # if it still returns a running pool object with a recent started_at, the instance is STILL RUNNING.
@@ -120,13 +117,13 @@ If `CLOSEDBROWSER_DASHBOARD_URL` is not set and user requests live view:
 2. Use their answer to construct the URL
 
 **Example:**
-- Dashboard: `https://browser.arranhs.com`
+- Dashboard: `https://browser.example.com`
 - Instance: `40d1c33d-3038-4b4f-8195-888f753229ba`
-- Live view: `https://browser.arranhs.com/browsers/40d1c33d-3038-4b4f-8195-888f753229ba/live-view`
+- Live view: `https://browser.example.com/browsers/40d1c33d-3038-4b4f-8195-888f753229ba/live-view`
 
 The `/browsers/{id}/live-view` path is appended automatically.
 
-**Getting INSTANCE_ID — use the dashboard UI, NOT the pool API.** Verified 2026-09-08: `GET /browser-pool` returns a long-lived POOL descriptor (its `id` predates the current session; has `max_browser_instances`), so `/browsers/{pool_id}/live-view` showed the user the WRONG browser. No API endpoint lists per-instance IDs (`/browsers`, `/instances`, `/browser-pool/{id}` all 404). Open `{DASHBOARD_URL}` (may need the user's SSO), find the running browser, copy its live-view link.
+**Getting INSTANCE_ID — use the dashboard UI, NOT the pool API.** `GET /browser-pool` returns a long-lived POOL descriptor (its `id` predates the current session; has `max_browser_instances`), so `/browsers/{pool_id}/live-view` shows the WRONG browser. No API endpoint lists per-instance IDs (`/browsers`, `/instances`, `/browser-pool/{id}` all 404). Open `{DASHBOARD_URL}` (log in if the dashboard requires it), find the running browser, copy its live-view link.
 
 **Pool management:** `GET /browser-pool` shows the pool descriptor only (id, started_at, max_browser_instances) — it does NOT list browser instances or live-view IDs.
 
